@@ -7,9 +7,8 @@ export default function Signup({ setConnected }) {
     const [fname, setFname] = useState("");
     const [lname, setLname] = useState("");
     const [email, setEmail] = useState("");
-    const [password_init, setPasswordInit] = useState("");
-    const [answer, setAnswer] = useState("");
-    const [selectedQuestion, setSelectedQuestion] = useState("Select you question");
+    const [role, setRole] = useState("");
+    const [password, setPassword] = useState("");
     const router = useRouter();
 
     const success = (<div className="h-25 w-25 bg-light rounded border-light d-flex flex-column justify-content-center align-items-center"><p className="text-success font-weight-bold h4"></p>Saved Successfully ✅<button type="button" onClick={() => close_popup(true)} className="btn btn-success mt-4" > close</button></div>);
@@ -35,12 +34,11 @@ export default function Signup({ setConnected }) {
             case "email":
                 setEmail(value);
                 break;
-            case "password_init":
-                setPasswordInit(value);
-                break;
-            case "answer":
-                setAnswer(value);
+            case "password":
+                setPassword(value);
                 break; // Don't forget to add break here
+            case "role":
+                setRole(value)
             default:
                 break;
         }
@@ -49,21 +47,20 @@ export default function Signup({ setConnected }) {
 
     const handleFormSubmit = async () => {
 
-        let name = `${fname} ${lname}`;
-
-        if (name.length < 5 || email.length < 3 || email.indexOf("@") < 0 || password_init.length < 4 || answer.length < 3) {
-            alert("please, enter your informations correctly !");
+        if (fname.length < 3 || lname.length < 3 || email.length < 3 || email.indexOf("@") < 0 || password.length < 4) {
+            alert("please, fill your informations correctly !");
             return 0;
         }
         try {
             const formDataToSend = new FormData();
-            formDataToSend.append("name", name);
+            formDataToSend.append("fname", fname);
+            formDataToSend.append("lname", lname);
             formDataToSend.append("email", email);
-            formDataToSend.append("password", password_init);
-            formDataToSend.append("recovery", answer);
+            formDataToSend.append("password", password);
+            formDataToSend.append("role", role);
 
             const response = await fetch(
-                "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/users/add/",
+                "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/users/",
                 {
                     method: "POST",
                     body: formDataToSend,
@@ -92,42 +89,42 @@ export default function Signup({ setConnected }) {
     }
 
     return (
-        <div className="h-100vh d-flex align-items-center justify-content-center">
+        <div className="h-100 vh d-flex align-items-center justify-content-center p-5">
         <div>
             <div
                 ref={popup}
                 style={{ zIndex: "10", backdropFilter: "blur(10px)" }}
-                className="w-100 h-100 position-absolute top-0 z-4 content d-none justify-content-center align-items-center"
+                className="w-100 h-100 position-absolute top-0 z-4 content d-none justify-content-center align-items-center "
             >
-                {/* Your content goes here */}
                 {messageOfRegistration}
 
             </div>
 
-            <div className="row  d-flex justify-content-center h-50">
-                <div className="col-lg-12 col-xl-11">
+            <div className="row  d-flex justify-content-center">
+                <div className="col-lg-12 col-xl-11 border border-dark rounded mt-2">
                     <div
-                        className="bg-transparent text-light"
+                        className="bg-transparent text-dark"
                         style={{ borderRadius: "25px" }}
                     >
                         <div className="card-body p-md-5 ">
                             <div className="row justify-content-center">
-                                <div className="col-md-10 col-lg-6 col-xl-5 order-2 order-lg-1 d-flex align-items-center justify-content-center">
+                                <div className=" order-2 order-lg-1 d-flex align-items-center justify-content-center">
 
                                     <form className="mx-1 mx-md-4">
                                     <h2 className="text-center h2 mb-2 mx-1 mx-md-4">
+                                    <i className="bi bi-people mr-3"></i>
                                         Let's Connect
                                     </h2>
                                         <div className="row">
                                             <div className="col">
                                                 <label className="form-label" htmlFor="fname">
                                                     First name
-                                                    <i className="obligatory">*</i>
                                                 </label>
                                                 <input
                                                     type="text"
                                                     id="fname"
                                                     name="fname"
+                                                    placeholder="john"
                                                     className="form-control"
                                                     onChange={handleInputChange}
                                                 />
@@ -135,68 +132,49 @@ export default function Signup({ setConnected }) {
                                             <div className="col">
                                                 <label className="form-label" htmlFor="lname">
                                                     Last name
-                                                    <i className="obligatory">*</i>
                                                 </label>
                                                 <input
                                                     type="text"
                                                     id="lname"
                                                     name="lname"
+                                                    placeholder="doe"
                                                     className="form-control"
                                                     onChange={handleInputChange}
                                                     required />
                                             </div>
                                         </div>
 
-                                        <label className="form-label" htmlFor="email">
+                                        <label className="form-label mt-2" htmlFor="email">
                                             Email
-                                            <i className="obligatory">*</i>
                                         </label>
                                         <input
                                             type="email"
                                             id="email"
                                             name="email"
+                                            placeholder="johndoe@example.com"
                                             className="form-control"
                                             onChange={handleInputChange}
                                             required
                                         />
-                                        <label className="form-label" htmlFor="password_init">
+                                        <label className="form-label mt-2" htmlFor="password">
                                             Password
-                                            <i className="obligatory">*</i>
                                         </label>
                                         <input
                                             type="password"
-                                            id="password_init"
-                                            name="password_init"
+                                            id="password"
+                                            name="password"
+                                            placeholder="my-pa$$w0rd"
                                             className="form-control"
                                             onChange={handleInputChange}
                                         />
-
-                                        <label className="form-label" htmlFor="password_conf">
-                                            Recovery question
-                                            <i className="obligatory">*</i>
+                                              <label className="form-label mt-2" htmlFor="password">
+                                            role
                                         </label>
-                                        <Dropdown className="bg-primary mb-2" onSelect={(eventKey) => handleSelect(eventKey)}>
-                                            <Dropdown.Toggle variant="light" id="dropdown-basic" className="w-100 text-start">
-                                                {selectedQuestion}
-                                            </Dropdown.Toggle>
-
-                                            <Dropdown.Menu className="w-100">
-                                                <Dropdown.Item eventKey="What was my best fruit ?">
-                                                    What was my best fruit ?
-                                                </Dropdown.Item>
-                                                <Dropdown.Item eventKey="Where my father had born ?">
-                                                    Where my father had born ?
-                                                </Dropdown.Item>
-                                                <Dropdown.Item eventKey="When have i worked ever ?">
-                                                    When have i worked ever ?
-                                                </Dropdown.Item>
-                                            </Dropdown.Menu>
-                                        </Dropdown>
                                         <input
                                             type="text"
-                                            id="answer"
-                                            name="answer"
-                                            placeholder="Your answer"
+                                            id="role"
+                                            name="role"
+                                            placeholder="Software Developer"
                                             className="form-control"
                                             onChange={handleInputChange}
                                         />
@@ -205,22 +183,22 @@ export default function Signup({ setConnected }) {
                                         <div className="d-flex justify-content-center mx-4 mb-3 mb-lg-4">
                                             <button
                                                 type="button"
-                                                className="btn border-light btn-lg inverse-hover"
+                                                className="btn btn-dark btn-lg"
                                                 onClick={handleFormSubmit}
                                             >
                                                 Register
                                             </button>
                                         </div>
-                                        <i className="obligatory">*</i>&nbsp;means obligatory field
-
+                                        <div className="row">
+                                        <hr className="w-25 border border-dark"/> 
+                                        <span className="h5"> or continue with </span>
+                                        <hr className="w-25 border border-dark"/> 
+                                        <br />
+                                        </div>
+                                        <br />
+                                        <p className="btn btn-dark w-100"><i className="bi bi-github mr-3"></i>github</p>
+                                        <p className="btn btn-light border border-dark w-100"><i className="bi bi-google mr-3"></i>google</p>
                                     </form>
-                                </div>
-                                <div className="col-md-10 col-lg-6 col-xl-7 d-flex align-items-center order-1 order-lg-2">
-                                    <img
-                                        src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-registration/draw1.webp"
-                                        className="img-fluid bg-transparent"
-                                        alt="Sample image"
-                                    />
                                 </div>
                             </div>
                         </div>

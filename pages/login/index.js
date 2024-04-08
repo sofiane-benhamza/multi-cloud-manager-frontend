@@ -27,11 +27,12 @@ export default function Login({ setConnected, setToken }) {
                         try {
                             const form = new FormData();
                             form.append("token", token);
+                            form.append("logout","true");
 
                             const response = await fetch(
-                                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/users/logout/`,
+                                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/users/`,
                                 {
-                                    method: "POST",
+                                    method: "DELETE",
                                     body: form,
                                 }
                             );
@@ -88,9 +89,9 @@ export default function Login({ setConnected, setToken }) {
             formDataToSend.append("password", password);
 
             const response = await fetch(
-                "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/users/verify/",
+                "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/users/",
                 {
-                    method: "POST",
+                    method: "PATCH",
                     body: formDataToSend,
                 }
             );
@@ -99,6 +100,7 @@ export default function Login({ setConnected, setToken }) {
                 const data = await response.json();
                 setConnected(true);
                 setToken(data.token);
+                localStorage.setItem("token",token)
                 router.push('/home');
             } else {
                 const errorData = await response.json();
@@ -111,72 +113,71 @@ export default function Login({ setConnected, setToken }) {
     };
 
     return (
-        <div className="h-100vh d-flex align-items-center justify-content-center">
-                    <div className="row d-flex justify-content-center align-items-center h-100 ">
-                        <div className="col-lg-12 col-xl-11">
-                            <div
-                                className="bg-transparent text-light"
-                                style={{ borderRadius: "25px" }}
-                            >
-                                <div className="card-body p-md-5">
-                                    <div className="row justify-content-center d-flex justify-content-center align-items-center">
-                                        <div className="col-md-8 col-lg-6 col-xl-3 col-sm-9  order-2 order-lg-1">
-                                            <h2 className="text-center h2 mb-2 mx-1 mx-md-4">
-                                                Let's Connect
-                                            </h2>
+        <div className=" d-flex align-items-center justify-content-center p-5">
+            <div className="row d-flex justify-content-center align-items-center col-xl-3 col-lg-3 col-md-5 col-sm-10 col-xs-12">
+                <div className="col-lg-12 col-xl-11 border border-dark rounded mt-3">
+                    <div
+                        className="bg-transparent text-dark rounded"
+                    >
+                        <div className="card-body p-md-5 ">
+                            <div className="row justify-content-center d-flex justify-content-center align-items-center">
+                                <div className="col-12">
+                                    <h2 className="text-center h2 mb-2 mx-1 my-4 md-4">
+                                    <i className="bi bi-people mr-3"></i>
+                                        Let's Connect
+                                    </h2>
 
-                                            <form className="mx-1 mx-md-4">
+                                    <form>
 
-                                                <label className="form-label" htmlFor="email">
-                                                    Email
-                                                    <i className="obligatory">*</i>
-                                                </label>
-                                                <input
-                                                    type="email"
-                                                    id="email"
-                                                    name="email"
-                                                    className="form-control mb-4"
-                                                    onChange={handleInputChange}
-                                                    required
-                                                />
-                                                <label className="form-label" htmlFor="password">
-                                                    Password
-                                                    <i className="obligatory">*</i>
-                                                </label>
-                                                <input
-                                                    type="password"
-                                                    id="password"
-                                                    name="password"
-                                                    className="form-control mb-4"
-                                                    onChange={handleInputChange}
-                                                />
+                                        <label className="form-label mt-2" htmlFor="email">
+                                            Email
+                                        </label>
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            name="email"
+                                            className="form-control mb-4"
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                        <label className="form-label mt-2" htmlFor="password">
+                                            Password
+                                        </label>
+                                        <input
+                                            type="password"
+                                            id="password"
+                                            name="password"
+                                            className="form-control mb-4"
+                                            onChange={handleInputChange}
+                                        />
 
-                                                <br />
-                                                <div className="d-flex justify-content-center mx-4 mb-3 mb-lg-4">
-                                                    <button
-                                                        type="button"
-                                                        className="btn border-light btn-lg inverse-hover"
-                                                        onClick={handleFormSubmit}
-                                                    >
-                                                        Connect
-                                                    </button>
-                                                </div>
-                                                <i className="obligatory">*&nbsp;</i>&nbsp;means obligatory field
-
-                                            </form>
+                                        <br />
+                                        <div className="d-flex justify-content-center mx-4 mb-3 mb-lg-4">
+                                            <button
+                                                type="button"
+                                                className="btn btn-dark btn-lg inverse-hover"
+                                                onClick={handleFormSubmit}
+                                            >
+                                                Connect
+                                            </button>
                                         </div>
-                                        <div className="col-md-10 col-lg-6 col-xl-5 d-flex align-items-center order-1 order-lg-2">
-                                            <img
-                                                src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-registration/draw1.webp"
-                                                className="img-fluid bg-transparent"
-                                                alt="Sample image"
-                                            />
+                                        <input type="checkbox" style={{ accentColor: "black" }} />&nbsp;&nbsp;&nbsp;Remember this device
+                                        <div className="row mt-2">
+                                            <hr className="w-25 mr-auto border border-dark" />
+                                            <span className="h5">continue with </span>
+                                            <hr className="w-25 mr-auto border border-dark" />
+                                            <br />
                                         </div>
-                                    </div>
+                                        <br />
+                                        <p className="btn btn-dark w-100"><i className="bi bi-github mr-3"></i>github</p>
+                                        <p className="btn btn-light border border-dark w-100"><i className="bi bi-google mr-3"></i>google</p>
+                                    </form>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
         </div>
     );
 }

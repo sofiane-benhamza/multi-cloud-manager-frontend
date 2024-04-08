@@ -1,13 +1,13 @@
 import { useRouter } from "next/router";
 import { Card, CardHeader, CardBody, Image } from "@nextui-org/react";
 import { useEffect } from "react";
-import Profile from '../profileNavbar.js'; // Importing the profile component
+import ProfileNavbar from '../../../comps/ProfileNavbar.js'; // Importing the profile component
 
 export default function profile() {
     const router = useRouter();
 
     return (
-        <>  <Profile />
+        <>  <ProfileNavbar />
             <div className="d-flex row w-100 justify-content-center text-light" style={{ minHeight: "calc( 100vh - 200px )" }}>
                 <Card className="py-4 mb-5 border mx-5 col-lg-3 col-md-4 col-sm-11 col-xs-11 cloud_provider_card"
                     style={{ border: "2px solid white", width: "306px", borderRadius: "10px", maxHeight: "400px" }}>

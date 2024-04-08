@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react';
 import React from 'react';
-import Header from "./components/Header";
+import Header from "../comps/Header";
 import "../styles/globals.scss";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 
 function MyApp({ Component, pageProps }) {
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setConnected] = useState(false);
   const [token, setToken] = useState("");
 
   const params = { isConnected, token };
-
-  const setConnected = (value) => { setIsConnected(value) };
+  useEffect(()=>{
+    localStorage.setItem("token",token)
+  },[token])
+  useEffect(()=>{
+    setToken(localStorage.getItem("token"))
+  },[])
 
   return (
     <>

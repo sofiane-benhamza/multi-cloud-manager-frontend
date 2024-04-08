@@ -1,0 +1,10 @@
+/*   GOOGLE   */
+@import url('https://fonts.googleapis.com/css2?family=Martian+Mono:wght@100..800&family=Rampart+One&display=swap');
+.martian-mono-head {
+  font-family: "Martian Mono", monospace;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  font-variation-settings:
+    "wdth" 100;
+}

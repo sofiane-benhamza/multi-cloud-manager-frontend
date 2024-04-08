@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Card, CardHeader, CardBody, Image } from "@nextui-org/react";
 import { Navbar, Nav } from 'react-bootstrap';
 import { useEffect } from "react";
-import Profile from './profileNavbar.js'; // Importing the profile component
+import ProfileNavbar from '../../comps/ProfileNavbar.js'; // Importing the profile component
 
 
 export default function controller() {
@@ -11,8 +11,7 @@ export default function controller() {
 
     return (
         <>
-            <Profile />
-
+            <ProfileNavbar />
         </>
     )
 }

@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { FullContext } from "../../../_app";
 import { getCredentials, getVPCs, regions } from "../../../../utils/functions";
 
-export default function VPC({ setWarning }) {
+export default function VPC() {
     const { isConnected, token } = useContext(FullContext);
     const router = useRouter();
 
@@ -42,28 +42,18 @@ export default function VPC({ setWarning }) {
                 method: "DELETE",
                 body: actionConfig,
             });
-            if (response.ok) {
-                const data = await response.json();
-                setWarning({
-                    message: "VPC deleted successfully ",
-                    type:"success",
-                    isShown: true
-                })
-                setFilter(prevConfig => ({ ...prevConfig, vPCs: filter.vPCs.filter(vPC => vPC['VPC ID'] !== vPCId) }))
-            } else {
-                setWarning({
-                    message: "Something went wrong, please try again later or contact support [error : 876]",
-                    type: "danger",
-                    isShown: true
-                })
-            }
+            if (!response.ok) throw new Error(`Failed to apply action on VPC: ${response.status}`);
+            const data = await response.json();
+            alert("Action successfully applied");
+            setFilter(prevConfig => ({ ...prevConfig, vPCs: filter.vPCs.filter(vPC => vPC['VPC ID'] !== vPCId) }))
         } catch (error) {
-            console.error("something went wrong");
+            console.error("Failed to apply action on VPC:", error);
+            alert("Something went wrong... Please try again.");
         }
     };
 
     return (
-        <div className="mt-5 tilt-warp-title">
+        <div className="mt-5">
             <div className="row justify-content-center">
                 <div className="col-md-8">
                     <div className="card">
@@ -93,7 +83,7 @@ export default function VPC({ setWarning }) {
                                         className="form-select w-50 bg-light border-0"
                                         onChange={handleInputChange}
                                     >
-                                        <option value="" defaultValue disabled>Choose a region</option>
+                                        <option value="" defaultValue disabled>Choose an installation region</option>
                                         {regions.map((region, index) => (
                                             <option key={index} value={region}>{region}</option>
                                         ))}

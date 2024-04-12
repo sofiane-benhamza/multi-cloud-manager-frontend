@@ -1,10 +1,20 @@
 /*   GOOGLE   */
-@import url('https://fonts.googleapis.com/css2?family=Martian+Mono:wght@100..800&family=Rampart+One&display=swap');
-.martian-mono-head {
-  font-family: "Martian Mono", monospace;
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@400..800&family=Comfortaa&family=Tilt+Warp&display=swap');
+
+.tilt-warp-title {
+  font-family: "Tilt Warp", sans-serif;
   font-optical-sizing: auto;
-  font-weight: 500;
+  font-weight: 400;
   font-style: normal;
   font-variation-settings:
-    "wdth" 100;
+    "XROT" 0,
+    "YROT" 0;
+}
+
+.comfortaa-article {
+  font-family: "Baloo Da 2", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 21px;
 }

@@ -12,7 +12,6 @@ body {
 @import "slider.css";
 @import "scrollbar.css";
 
-
 a {
   text-decoration: none !important;
   color: inherit !important;
@@ -29,4 +28,24 @@ a {
 
 .down-to-up:hover {
   transform: translateY(-10px); /* Move the element 10 pixels up */
+}
+
+.custom-dark-button {
+  color: white !important;
+  border-radius: 10px;
+  transition: all .3s;
+  &:hover{
+    color: black !important;
+    background-color: white;
+  }
+}
+
+.custom-light-button{
+  border-radius: 10px;
+  color: black !important;
+  transition: all .3s;
+  &:hover{
+    color: white !important;
+    background-color: black;
+  }
 }

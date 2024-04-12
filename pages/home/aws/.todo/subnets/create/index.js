@@ -3,9 +3,10 @@ import { useRouter } from "next/router";
 import { FullContext } from "../../../../_app";
 import { getCredentials, regions, separation, validateIPAddress } from "../../../../../utils/functions";
 
-export default function CreateVPC({ setWarning, setToken }) {
-    const { token } = useContext(FullContext);
+export default function CreateVPC({ setConnected, setToken }) {
+    const { isConnected, token } = useContext(FullContext);
     const router = useRouter();
+    const { code } = router.query;
 
     // VPC configuration
     const [vPC, setVPC] = useState({
@@ -42,7 +43,7 @@ export default function CreateVPC({ setWarning, setToken }) {
             await getCredentials(token, setChooseFrom);
         };
         getAccounts();
-    }, [token]);
+    }, []);
 
     // Can not be optimized cause, calling functions time to time
     const handleInputChange = (e) => {
@@ -117,23 +118,16 @@ export default function CreateVPC({ setWarning, setToken }) {
             );
             if (response.ok) {
                 const data = await response.json();
-                setWarning({
-                    message:"Virtual private cloud created succesfully",
-                    type:"success",
-                    isShown:true
-                })
+                setCreateButtonContent(<span>Successfully&nbsp;created</span>)
+
                 router.push("./")
             } else {
                 const errorData = await response.json();
-                setWarning({
-                    message:"Something went wrong, please try again later or contact support [error : 879]",
-                    type:"warning",
-                    isShown:true
-                })
+                alert("something went wrong ... 221 ");
 
             }
         } catch (error) {
-           console.error("something went wrong")
+            alert("something went wrong ... 259 ");
         } finally {
             setCreateButtonContent(<span>Create</span>)
         }
@@ -141,7 +135,7 @@ export default function CreateVPC({ setWarning, setToken }) {
     };
 
     return (
-        <div className=" d-flex align-items-center justify-content-center p-5 tilt-warp-title">
+        <div className=" d-flex align-items-center justify-content-center p-5">
             <div className="row d-flex justify-content-center align-items-center col-xl-4 col-lg-4 col-md-5 col-sm-10 col-xs-12">
                 <div className="col-lg-12 col-xl-11 border border-dark rounded mt-3">
                     <div
@@ -151,7 +145,7 @@ export default function CreateVPC({ setWarning, setToken }) {
                             <div className="row justify-content-center d-flex justify-content-center align-items-center">
                                 <div className="col-12">
                                     <h3 className="text-center h3 mb-2 mx-1 mx-md-4">
-                                        create a VPC
+                                        create a Virtual Private Cloud
                                     </h3>
                                     <form>
 
@@ -217,11 +211,7 @@ export default function CreateVPC({ setWarning, setToken }) {
                                                         onBlur={(e) => {
                                                             if (!validateIPAddress(vPC.networkAddress)) {
                                                                 setVPC((prevConfig) => ({ ...prevConfig, networkAddress: "" }));
-                                                                setWarning({
-                                                                    message:"Please enter a valid network address",
-                                                                    type:"warning",
-                                                                    isShown:true
-                                                                })
+                                                                alert("Please enter a valid network address");
                                                             }
                                                         }}
                                                         value={vPC.networkAddress} className="form-control"
@@ -239,11 +229,7 @@ export default function CreateVPC({ setWarning, setToken }) {
                                                         onChange={handleInputChange}
                                                         onBlur={() => {
                                                             if (!(vPC.mask > 15 && vPC.mask < 29)) {
-                                                                setWarning({
-                                                                    message:"Please enter a valide mask, digits from 16 to 28 only are accepted",
-                                                                    type:"warning",
-                                                                    isShown:true
-                                                                })
+                                                                alert("enter a valide mask, 16-28");
                                                                 setVPC(prevConfig => ({ ...prevConfig, mask: 16 }));
                                                             }
                                                         }}

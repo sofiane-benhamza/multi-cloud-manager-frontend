@@ -5,33 +5,41 @@ import { Card, CardHeader, CardBody } from "@nextui-org/react";
 import { useEffect, useContext, useState } from "react";
 import ProfileNavbar from '../../../comps/ProfileNavbar.js'; // Importing the profile component
 import { FullContext } from "../../_app";
+import { getCredentials  } from "../../../utils/functions"
 
-export default function profileCredentials() {
-    const { isConnected, token } = useContext(FullContext);
+export default function ProfileCredentials({setWarning}) {
+    const { token } = useContext(FullContext);
     const router = useRouter();
     const [addCredentialActive, setAddCredentialActive] = useState(false);
-    const [secretAccessKey, setSecretAccessKey] = useState("");
-    const [accessKeyId, setAccessKeyId] = useState("");
-    const [cloud, setCloud] = useState("aws");
     const [accounts, setAccounts] = useState([]);
+    const [newAccount, setNewAccount] = useState({
+        cloud: "aws",
+        accessKeyId: "",
+        secretAccessKey: ""
+    })
+
 
 
     const handleCloudChange = (cloud) => {
-        setCloud(cloud);
+        setNewAccount(prevState => ({
+            ...prevState,
+            [cloud]: cloud
+        }))
     }
 
-    const submitCredential = async () => {
-        if (secretAccessKey.length < 4 || accessKeyId.length < 4 || cloud.length < 2) {
-            alert("Please enter your information correctly!");
-            return;
-        }
+    useEffect(() => {
+        token &&
+            getCredentials(token, setAccounts, true);  //true = get full informations
+    }, [token]);
 
+    const submitCredential = async (e) => {
+        e.preventDefault();
         try {
             const form = new FormData();
             form.append("token", token);
-            form.append("accessKeyId", accessKeyId);
-            form.append("secretAccessKey", secretAccessKey);
-            form.append("cloud", cloud)
+            form.append("accessKeyId", newAccount.accessKeyId);
+            form.append("secretAccessKey", newAccount.secretAccessKey);
+            form.append("cloud", newAccount.cloud)
             const response = await fetch(
                 "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/cloud/",
                 {
@@ -42,51 +50,30 @@ export default function profileCredentials() {
 
             if (response.ok) {
                 const data = await response.json();
-                alert("Saved succesfully");
+                setWarning({
+                    message: "Credentials saved succesfully",
+                    type:"success",
+                    isShown: true
+                })
                 setAccounts([...accounts, {
                     id: 'will be generated',
-                    accessKeyId: accessKeyId,
-                    secretAccessKey: secretAccessKey,
-                    cloud: cloud
+                    accessKeyId: newAccount.accessKeyId,
+                    secretAccessKey: newAccount.secretAccessKey,
+                    cloud: newAccount.cloud
                 }])
-            } else {
-                const errorData = await response.json();
-                alert("something went wrong 826 : " + errorData.error);
+            }else{
+                setWarning({
+                    message: "Something went wrong, please try again later or contact support [error : 981]",
+                    type:"danger",
+                    isShown: true
+                })
             }
         } catch (error) {
-            console.error("somethin went wrong 986 :", error.message);
+            console.error("something went wrong");
         }
 
 
     }
-
-    const getCredentials = async () => {
-        try {
-            const response = await fetch(
-                "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/cloud/?token=" + token,
-                {
-                    method: "GET",
-                }
-            );
-            const data = await response.json();
-            const accounts = data.map(item => ({
-                id: item.uniqueName,
-                accessKeyId: item.accessKeyId,
-                secretAccessKey: item.secretAccessKey,
-                cloud: item.cloud
-            }));
-            setAccounts(accounts);
-        } catch (error) {
-            alert("something went wrong")
-        }
-    }
-    useEffect(() => {
-        const getAccounts = async () => {
-            await getCredentials();
-        };
-        getAccounts();
-    }, []);
-
     const deleteCredential = async (id) => {
         try {
             const credential = new FormData();
@@ -100,16 +87,24 @@ export default function profileCredentials() {
                 }
             );
             if (response.ok) {
-                alert("credentials deleted successfully");
+                setWarning({
+                    message:"Credentials deleted successfully",
+                    type:"success",
+                    isShown: true
+                })
                 // Filter out the item with the id to delete
                 const updatedAccounts = accounts.filter(item => item.id !== id);
                 // Update the state with the new array
                 setAccounts(updatedAccounts);
             } else {
-                alert("something went wrong ... 564")
+                setWarning({
+                    message: "Something went wrong, please try again later or contact support [error : 983]",
+                    type:"danger",
+                    isShown: true
+                })
             }
         } catch (error) {
-            alert("something went wrong")
+            console.error("something went wrong");
         }
     }
 
@@ -125,7 +120,7 @@ export default function profileCredentials() {
                 break;
         }
         return (
-            <Card key={index} style={{ height: "300px" }} className="mb-5  col-lg-3 col-md-4 col-sm-12 col-xs-12">
+            <Card key={index} className="mb-5 col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12">
                 <div className="mx-2 border border-dark rounded">
                     <CardHeader className="justify-between">
                         <div className="d-flex flex-row justify-content-left align-items-center gap-5">
@@ -133,9 +128,9 @@ export default function profileCredentials() {
                                 <img className="bg-light p-2" width="40px" height="35px" src={srcOfLogo} alt="Logo" />
                             </div>
                             <div className="ml-3 m-0 d-flex flex-row align-items-center">
-                                <div className="text-small font-semibold leading-none">{name}</div>
+                                <div className="font-semibold leading-none font-weight-bolder baloo-da-beautiful">{name}</div>
                             </div>
-                            <button className="text-light ml-auto border bg-danger p-2 rounded" onClick={() => { if( id !== "will be generated" ){deleteCredential(id) }}}>
+                            <button className="text-light ml-auto border bg-danger p-2 rounded" onClick={() => { if (id !== "will be generated") { deleteCredential(id) } }}>
                                 <i className="bi bi-trash"></i>
                             </button>
                         </div>
@@ -165,11 +160,11 @@ export default function profileCredentials() {
 
     const AddCredentialCard = () => {
         return addCredentialActive ? (
-            <Card className="mb-5 col-lg-3 col-md-4 col-sm-12 col-xs-12 d-flex align-items-center">
-                <div className="mx-2 border rounded">
+            <Card className="col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12 d-flex justify-content-center align-items-center mb-5" >
+                <form className="border rounded w-100" onSubmit={submitCredential}>
                     <CardHeader className="justify-between">
                         <div className="d-flex flex-row justify-content-left align-items-center gap-5">
-                            <div className="3 m-0 d-flex flex-row align-items-center">
+                            <div className="m-0 d-flex flex-row align-items-center">
                                 <div className="form-check m-1">
                                     <input className="form-check-input" type="radio" name="cloud" id="aws" value="aws" onClick={(e) => handleCloudChange(e.target.value)} defaultChecked />
                                     <label className="form-check-label" htmlFor="aws">
@@ -189,30 +184,45 @@ export default function profileCredentials() {
                                     </label>
                                 </div>
                             </div>
-                            <button className="text-dark ml-auto border bg-success p-2 rounded" onClick={() => submitCredential()}>
+                            <button className="text-dark ml-auto border bg-success p-2 rounded" type="submit">
                                 <i className="bi bi-bookmark-plus"></i>
                             </button>
                         </div>
                     </CardHeader>
-
                     <CardBody className="overflow-visible d-flex flex-column justify-content-center">
                         <table className="table text-dark">
                             <tbody>
                                 <tr>
                                     <td>Access Key ID</td>
-                                    <td><input type="text" className="w-100" defaultValue={accessKeyId} onBlur={(e) => {let newValue=e.target.value;setAccessKeyId(newValue); e.target.value=newValue;}} /></td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            className="w-100"
+                                            minLength={8}
+                                            defaultValue={newAccount.accessKeyId}
+                                            onBlur={(e) => { setNewAccount(prevState => ({ ...prevState, accessKeyId: e.target.value })); e.target.focus() }}
+                                            required
+                                        />
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td>Secret Access Key</td>
-                                    <td><input type="text" className="w-100" defaultValue={secretAccessKey} onBlur={(e) => {let newValue=e.target.value;setSecretAccessKey(newValue);e.target.value=newValue}} /></td>
+                                    <td><input
+                                        type="text"
+                                        className="w-100"
+                                        defaultValue={newAccount.secretAccessKey}
+                                        minLength={8}
+                                        onBlur={(e) => { setNewAccount(prevState => ({ ...prevState, secretAccessKey: e.target.value })) }} // Fix: Use string "secretAccessKey"
+                                        required
+                                    /></td>
                                 </tr>
                             </tbody>
                         </table>
                     </CardBody>
-                </div>
+                </form>
             </Card>
         ) : (
-            <Card className="mb-5 col-lg-3 col-md-4 col-sm-12 col-xs-12 d-flex align-items-center">
+            <Card className="col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12 d-flex align-items-center">
 
                 <div className="w-100 h-100 d-flex justify-content-center align-items-center">
                     <h2 className="btn btn-success" onClick={() => { setAddCredentialActive(true) }}>
@@ -227,8 +237,8 @@ export default function profileCredentials() {
     return (
         <>
             <ProfileNavbar />
-            <div className="d-flex row w-100 justify-content-center text-dark m-auto">
-                <div className="d-grid row w-100 col-xl-10 col-lg-10 text-dark justify-content-start">
+            <div className="d-flex row w-100 justify-content-center text-dark m-auto tilt-warp-title">
+                <div className="d-grid row w-100 col-xl-10 col-lg-10 col-md-11 col-sm-12 col-xs-12 text-dark justify-content-start">
                     {accounts.map((account, index) => (
                         <CredentialCard
                             key={index} // Assuming index is a suitable key
@@ -236,7 +246,6 @@ export default function profileCredentials() {
                             id={account.id} // Use id or another suitable property
                             accessKeyId={account.accessKeyId}
                             secretAccessKey={account.secretAccessKey}
-                            index={index}
                         />
                     ))}
                     <AddCredentialCard />

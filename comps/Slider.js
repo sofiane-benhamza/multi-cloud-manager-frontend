@@ -34,26 +34,30 @@ export default function Slider() {
     },
     [carousel]
   )
-  const XCard = (provider, description, logo) => {
+  const CloudProvider = (provider, description, logo) => {
     return (
       <Card sx={{ maxWidth: 345 }}>
-      <CardActionArea>
-        <CardMedia
-          component="img"
-          height="140"
-          image={logo}
-          alt="green iguana"
-        />
-        <CardContent>
-          <Typography gutterBottom variant="h5" component="div">
-          {provider}   
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-          {description}
-          </Typography>
-        </CardContent>
-      </CardActionArea>
-    </Card>
+        <CardActionArea>
+          <CardMedia
+            component="img"
+            height="140"
+            image={logo}
+            alt="cloud provider"
+          />
+          <CardContent>
+            <Typography gutterBottom variant="h5" component="div">
+              <span className="tilt-warp-title">
+                {provider}
+              </span>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              <span className="tilt-warp-title">
+                {description}
+              </span>
+            </Typography>
+          </CardContent>
+        </CardActionArea>
+      </Card>
     )
   }
 
@@ -62,19 +66,19 @@ export default function Slider() {
       <div className="scene">
         <div className="carousel keen-slider" ref={sliderRef}>
           <div className="carousel__cell number-slide1 ">
-          {XCard("Amazon Web Services, Inc.","a subsidiary of Amazon that provides on-demand cloud computing platforms and APIs to individuals,","https://assets.intersystems.com/26/bd/6a6aa762425f87ad7d5c2fe65f8c/awslogo-image.jpg")}
+            {CloudProvider("Amazon Web Services, Inc.", "a subsidiary of Amazon that provides on-demand cloud computing platforms and APIs to individuals,", "https://assets.intersystems.com/26/bd/6a6aa762425f87ad7d5c2fe65f8c/awslogo-image.jpg")}
           </div>
           <div className="carousel__cell number-slide2">
-          {XCard("Microsoft Azure, Inc.","Microsoft Azure, often referred to as Azure, is a cloud computing platform run by Microsoft.","https://media.licdn.com/dms/image/D5612AQFNlURU9XPozg/article-cover_image-shrink_720_1280/0/1690582480376?e=2147483647&v=beta&t=ucmluwd5D1v3vZtRRNNS5dRADTqVyqWjw0qZe9b9-Ew")}
+            {CloudProvider("Microsoft Azure, Inc.", "Microsoft Azure, often referred to as Azure, is a cloud computing platform run by Microsoft.", "https://media.licdn.com/dms/image/D5612AQFNlURU9XPozg/article-cover_image-shrink_720_1280/0/1690582480376?e=2147483647&v=beta&t=ucmluwd5D1v3vZtRRNNS5dRADTqVyqWjw0qZe9b9-Ew")}
 
           </div>
           <div className="carousel__cell number-slide3">
-            {XCard("Google Cloud Platform","Google Cloud Platform, offered by Google, is a suite of cloud computing services","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8cbaCdab7xdqZ7qpN-MwXg0ccikGFjuRKFz6sQyouow&s")}
+            {CloudProvider("Google Cloud Platform", "Google Cloud Platform, offered by Google, is a suite of cloud computing services", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8cbaCdab7xdqZ7qpN-MwXg0ccikGFjuRKFz6sQyouow&s")}
           </div>
           <div className="carousel__cell number-slide4">
-            {XCard("Coming Soon..","Cloud Provider Inc.","https://www.onlogic.com/company/io-hub/wp-content/uploads/2021/11/Cloud-header-image-770X421.jpg")}
+            {CloudProvider("Coming Soon..", "Cloud Provider Inc.", "https://www.onlogic.com/company/io-hub/wp-content/uploads/2021/11/Cloud-header-image-770X421.jpg")}
           </div>
-          
+
         </div>
       </div>
     </div>

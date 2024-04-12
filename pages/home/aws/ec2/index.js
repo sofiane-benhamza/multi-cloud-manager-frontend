@@ -1,31 +1,14 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
 import { FullContext } from "../../../_app";
-import { getCredentials } from "../../../../utils/functions";
+import { getCredentials, getEC2s, regions } from "../../../../utils/functions";
 
-export default function EC2() {
-    const { isConnected, token } = useContext(FullContext);
+export default function EC2({ setWarning }) {
+    const { token } = useContext(FullContext);
     const router = useRouter();
 
     // State for filter and instances
     const [filter, setFilter] = useState({ account: "", region: "", accounts: [], instances: [] });
-
-    // Fetch EC2 instances based on filter
-    const getEC2s = async () => {
-        try {
-            const response = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/ec2/?token=${token}&uniqueName=${filter.account}&region=${filter.region}`);
-            if (!response.ok) throw new Error(`Failed to fetch EC2 instances: ${response.status}`);
-            let data = await response.json();
-            if(data.length == 0)
-                data = [{ name: "there is no instances", id: "-", size: "-", privateIp: "-", publicIp: "-" }]
-            setFilter((prevState)=>({
-                ...prevState,
-                instances: data,
-            }))
-        } catch (error) {
-            console.error("something went wrong ... 362");
-        }
-    };
 
     // Effect to fetch account names when component mounts
     useEffect(() => {
@@ -35,7 +18,7 @@ export default function EC2() {
     // Effect to fetch EC2 instances when filter changes
     useEffect(() => {
         if (filter.account && filter.region) {
-            getEC2s();
+            getEC2s(token, filter.account, filter.region, setFilter);
 
         }
     }, [filter.account, filter.region]);
@@ -60,21 +43,30 @@ export default function EC2() {
         try {
             const response = await fetch(
                 `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/ec2/`, {
-                method: "POST",
+                method: "PUT",   //update
                 body: actionConfig,
             });
-            if (!response.ok) throw new Error(`Failed to apply action on ec2: ${response.status}`);
-            const data = await response.json();
-            alert("action successfully applied")
+            if (response.ok) {
+                setWarning({
+                    message: `instance ${instances.filter(instance => {instance,id == eC2Id}).name} has been ${action}ed successfully,`,
+                    type: "success",
+                    isShown: true
+                })
+            }else{
+            setWarning({
+                message: "something went wrong, please try again later or contact support, [error : 721] ",
+                type: "danger",
+                isShown: true
+            })
+        }
         } catch (error) {
-            console.error("Failed to apply on instance :", error);
-            alert("Something went wrong ... 382");
+            console.error("something went wrong");
         }
     }
 
     return (
         <div className="mt-5">
-            <div className="row justify-content-center">
+            <div className="row justify-content-center tilt-warp-title h6">
                 <div className="col-md-8">
                     <div className="card">
                         <div className="card-body">
@@ -104,15 +96,14 @@ export default function EC2() {
                                         onChange={handleInputChange}
                                     >
                                         <option value="" disabled>Choose a region</option>
-                                        <option value="us-east-1">us-east-1</option>
-                                        <option value="us-east-2">us-east-2</option>
-                                        <option value="us-west-1">us-west-1</option>
-                                        <option value="us-west-2">us-west-2</option>
-                                        {/* Add other regions */}
+                                        {regions.map((region, index) => (
+                                            <option key={index} value={region}>{region}</option>
+                                        ))}
+
                                     </select>
                                 </div>
-                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={()=>{getEC2s()}} disabled={!(filter.account && filter.region)}>
-                                        <i className="bi bi-arrow-clockwise"></i>
+                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getEC2s(token, filter.account, filter.region, setFilter) }} disabled={!(filter.account && filter.region)}>
+                                    <i className="bi bi-arrow-clockwise"></i>
                                 </button>
                             </div>
                             <div className="table-responsive">

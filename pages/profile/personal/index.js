@@ -3,41 +3,42 @@ import { useEffect, useState, useContext } from "react";
 import ProfileNavbar from '../../../comps/ProfileNavbar.js'; // Importing the profile component
 import { FullContext } from "../../_app";
 import { getPersonnalInfo } from "../../../utils/functions.js";
-const CustomInput = ({ setterFunc, holder, id, label, disabledValue, showPen, setDisabled }) => {
-    return (
 
-        <div className="form-group">
-            <label className="form-label" htmlFor={id}>
-                {label}
-            </label>
-            <div className="input-group align-items-center">
-                <input
-                    className="form-control text-dark"
-                    value={holder}
-                    id={id}
-                    name={id}
-                    type="text"
-                    readOnly={disabledValue}
-                    onChange={(e) => {
-                        setterFunc((prevState) => ({ ...prevState, [id]: e.target.value }));
-
-                    }} />
-                <span className="input-group-append">
-                    {showPen && <button
-                        className="btn btn-outline-secondary"
-                        type="button"
-                        onClick={(e) => { setDisabled((prevState) => ({ ...prevState, [id]: !disabledValue })); e.target.disabled = true; }}>
-                        <i className="bi bi-pencil"></i>
-                    </button>}
-                </span>
-            </div>
-        </div>
-    );
-};
-
-export default function ProfileCredentials() {
-    const { isConnected, token } = useContext(FullContext);
+export default function ProfileCredentials({setWarning}) {
+    const { token } = useContext(FullContext);
     const [updateButtonContent, setUpdateButtonContent] = useState(<span>Update</span>)
+    const CustomInput = ({ holder, id, label, showPen }) => {
+        return (
+            <div className="form-group">
+                <label className="form-label" htmlFor={id}>
+                    {label}
+                </label>
+                <div className="input-group align-items-center">
+                    <input
+                        className="form-control text-dark"
+                        defaultValue={holder}
+                        id={id}
+                        name={id}
+                        type="text"
+                        minLength={(id==="fname" || id==="lname") ? 4: 8} 
+                        readOnly={disabled[id]}
+                        required={!disabled[id]}
+                        onBlur={(e) => {
+                            setPersonnalInfo((prevState) => ({ ...prevState, [id]: e.target.value }));
+                        }}
+                    />
+                    <span className="input-group-append">
+                        {showPen && <button
+                            className="btn btn-outline-secondary"
+                            type="button"
+                            onClick={(e) => { setDisabled((prevState) => ({ ...prevState, [id]: !disabled[id] })); e.target.disabled = true; }}>
+                            <i className="bi bi-pencil"></i>
+                        </button>}
+                    </span>
+                </div>
+            </div>
+        );
+    };
 
     const [personnalInfo, setPersonnalInfo] = useState({
         fname: "",
@@ -57,29 +58,33 @@ export default function ProfileCredentials() {
         role: true
     });
 
-    //check values only where its disabled :
-    const personnalInfoFetched = () => {
-        return Object.values(personnalInfo).every(value => value !== null && value !== undefined);
-    };
-
     const router = useRouter();
 
 
-    const handleUpdateUser = async () => {
+    const handleUpdateUser = async (e) => {
+        e.preventDefault();
         setUpdateButtonContent(<span><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> please wait</span>);
         try {
             const updatedData = new FormData();
             updatedData.append("token", token);
-
-            if (personnalInfo.newPassword !== personnalInfo.newPasswordConf) {  // Check match passwords
-                alert("Passwords do not match");
+            if ( !disabled.password &&(personnalInfo.newPassword !== personnalInfo.newPasswordConf)) {
+                // Check match passwords
+                setWarning({
+                    message: "New password fields does not match !",
+                    type:"danger",
+                    isShown: true
+                })
                 return;
             }
 
             let willUpdate = false;
             for (const [key, value] of Object.entries(personnalInfo)) {
-                if (!disabled[key] && key !== "newPasswordConf") { // Only append non-disabled fields, excluded match password confirmation
+                if (!disabled[key] && key !== "newPasswordConf" && key !== "email") { // Only append non-disabled fields, excluded match password confirmation
                     updatedData.append(key, value);
+                    setPersonnalInfo((prevState) => ({
+                        ...prevState,
+                        key: value
+                    }))
                     willUpdate = true;
 
                 }
@@ -93,71 +98,97 @@ export default function ProfileCredentials() {
                     }
                 );
                 if (response.ok) {
-                    alert("Information updated successfully");
-                    router.push("./");
+                    setWarning({
+                        message: "Your informations has been updated succesfully",
+                        type:"success",
+                        isShown: true
+                    })
+                    const allFields = Object.keys(disabled);
+                    const allFieldsToTrue = Object.fromEntries(allFields.map(field => [field, true]));
+                    setDisabled(allFieldsToTrue);
                 } else {
-                    console.error("Something went wrong ... 283");
+                    setWarning({
+                        message:"Wrong password, please double check your credentials.",
+                        type: "danger",
+                        isShown: true 
+                    })
                 }
             } else {
-                setTimeout(() => {
-                    alert("no informations provided to be updated !");
-                    setUpdateButtonContent(<span>Update</span>)
-                }, 1000)
+                setWarning({
+                    message:"No informations marked to be updated !",
+                    type: "warning",
+                    isShown: true 
+                })
             }
 
         } catch (error) {
             console.error("Error during registration:", error.message);
+        } finally {
+            setTimeout(() => {
+                setUpdateButtonContent(<span>Update</span>)
+            }, 1000)
         }
     };
 
     useEffect(() => {
-        // Verify connection
-        isConnected ? null : router.push("/");
+        token && getPersonnalInfo(token, setPersonnalInfo);            
+    }, [token]); // Dependencies array is empty since it should run only once
 
-        getPersonnalInfo(token, setPersonnalInfo); // Call the async function
+    const [personnalInfoAreFetched, setpersonnalInfoAreFetched] = useState(false);
 
-    }, []); // Dependencies array is empty since it should run only once
+    useEffect(() => {
+        // Check if all values in personnalInfo are non-null and non-undefined
+        const isFetched = Object.values(personnalInfo).every(value => value !== null && value !== undefined);
+        setpersonnalInfoAreFetched(isFetched);
+    }, [personnalInfo]); // Re-run on changes to personnalInfo
 
     return (
         <>
             <ProfileNavbar />
-            <div className="d-flex row w-100 justify-content-center text-dark" style={{ minHeight: "calc( 100vh - 200px )" }}>
-                {personnalInfoFetched() && (
-                    <form className="mx-1 mx-md-4 ">
+            <div className="d-flex w-100 justify-content-center text-dark tilt-warp-title">
+                {personnalInfoAreFetched ? (
+                    <form className="mt-4 border border-dark rounded p-5" onSubmit={handleUpdateUser}>
                         <div className="row">
                             <div className="col">
-                                <CustomInput setterFunc={setPersonnalInfo} holder={personnalInfo.fname} id="fname" label="First name" disabledValue={disabled.fname} showPen={true} setDisabled={setDisabled} />
+                                <CustomInput holder={personnalInfo.fname} id="fname" label="First name" showPen={true} />
                             </div>
                             <div className="col">
-                                <CustomInput setterFunc={setPersonnalInfo} holder={personnalInfo.lname} id="lname" label="Last name" disabledValue={disabled.lname} showPen={true} setDisabled={setDisabled} />
+                                <CustomInput holder={personnalInfo.lname} id="lname" label="Last name" showPen={true} />
                             </div>
                         </div>
                         <div className="form-group">
-                            <CustomInput setterFunc={setPersonnalInfo} holder={personnalInfo.email} id="email" label="Email" disabledValue={disabled.email} showPen={true} setDisabled={setDisabled} />
+                            <CustomInput holder={personnalInfo.email} id="email" label="Email" showPen={false} />
                         </div>
                         <div className="form-group">
-                            <CustomInput setterFunc={setPersonnalInfo} holder={personnalInfo.password} id="password" label="Password" disabledValue={disabled.password} showPen={true} setDisabled={setDisabled} />
+                            <CustomInput holder={personnalInfo.password} id="password" label="Password" showPen={true} />
                             {!disabled.password && (
                                 <>
-                                    <CustomInput setterFunc={setPersonnalInfo} holder={personnalInfo.newPassword} id="newPassword" label="New Password" disabledValue={false} showPen={false} />
-                                    <CustomInput setterFunc={setPersonnalInfo} holder={personnalInfo.newPasswordConf} id="newPasswordConf" label="Validate Password" disabledValue={false} showPen={false} />
+                                    <CustomInput holder={personnalInfo.newPassword} id="newPassword" label="New Password" showPen={false} />
+                                    <CustomInput holder={personnalInfo.newPasswordConf} id="newPasswordConf" label="Validate Password" showPen={false} />
                                 </>
                             )}
                         </div>
                         <div className="form-group">
-                            <CustomInput setterFunc={setPersonnalInfo} holder={personnalInfo.role} id="role" label="Current role" disabledValue={disabled.role} showPen={true} setDisabled={setDisabled} />
+                            <CustomInput holder={personnalInfo.role} id="role" label="Current role" showPen={true} />
                         </div>
                         <div className="d-flex justify-content-center mx-4 mb-3 mb-lg-4">
                             <button
-                                type="button"
+                                type="submit"
                                 className="btn btn-dark border-light btn-lg inverse-hover"
-                                onClick={handleUpdateUser}
                             >
                                 {updateButtonContent}
                             </button>
                         </div>
+                    </form>) : (
+                    <form>
+                        <button className="btn btn-light border-light btn-lg m-5 p-5">
+                            <div className="spinner-border text-primary" style={{ fontSize: "40px" }} role="status">
+                                <span className="visually-hidden"></span>
+                            </div>
+                        </button>
+
                     </form>)}
-            </div>
+            </div >
         </>
     );
 }

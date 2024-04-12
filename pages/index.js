@@ -1,6 +1,5 @@
 "use client";
 import Head from 'next/head';
-import { useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 import Slider from "../comps/Slider";
 import * as React from "react"
@@ -16,16 +15,16 @@ export default function Home() {
           <link rel="icon" href="/favicon.ico" />
         </Head>
 
-        <section>
+        <section className='tilt-warp-title'>
           <div className="container">
             <div className="row text-dark">
               <div className="col text-center mt-5 mb-5">
-                <h2 >Managing</h2>
-                <h1 className="display-4 font-weight-bolder">
-                  Cloud Providers Easily{" "}
+                <h2 className='textsmall'>Managing</h2>
+                <h1 className="display-4 ">
+                  Cloud Providers Easily
                 </h1>
-                <p className="lead text-light">
-                  The most trusted way to manage cloud services :){" "}
+                <p className="lead text-dark my-4">
+                  The most trusted way to manage cloud services
                 </p>
               </div>
             </div>

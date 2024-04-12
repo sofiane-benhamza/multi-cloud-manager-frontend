@@ -3,15 +3,14 @@ import { useRouter } from "next/router";
 import { FullContext } from "../../../../_app";
 import { getCredentials, getVPCs, getSubnets, getSecurityGroups, getSSHKeys, sizes, regions, separation } from "../../../../../utils/functions";
 
-export default function CreateEC2({ setConnected, setToken }) {
-    const { isConnected, token } = useContext(FullContext);
+export default function CreateEC2({ setWarning, setToken }) {
+    const { token } = useContext(FullContext);
     const router = useRouter();
-    const { code } = router.query;
 
     // EC2 configuration
     const [eC2, setEC2] = useState({
         account: "",
-        sSHKeyName: "ssh",
+        sSHKeyName: "",
         instanceSize: "",
         serverName: "",
         region: "",
@@ -51,12 +50,14 @@ export default function CreateEC2({ setConnected, setToken }) {
     const keyNameRef = useRef(null);                     //reference of input of keyname
 
 
-    useEffect(() => { // Call get credentials
-        const getAccounts = async () => {
-            await getCredentials(token, setChooseFrom);
+    useEffect(() => {
+        const handleCredentials = async () => {
+            const response = await getCredentials(token, setChooseFrom);
         };
-        getAccounts();
-    }, []);
+        token && handleCredentials(); // Call the function immediately mount
+
+    }, [token]); // token variation for re-execution
+
 
     // Can not be optimized cause, calling functions time to time
     const handleInputChange = (e) => {
@@ -146,8 +147,14 @@ export default function CreateEC2({ setConnected, setToken }) {
         }
     };
 
-    const handleCreateEC2 = async () => {
+    const handleCreateEC2 = async (e) => {
+        e.preventDefault();
+
         setCreateButtonContent(<span><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> please wait</span>);
+        if (!eC2ConfigIsComplete) {
+            return
+        };
+
         try {
             const eC2Configuration = new FormData();
             eC2Configuration.append("token", token); //token authentication
@@ -169,13 +176,18 @@ export default function CreateEC2({ setConnected, setToken }) {
             );
             if (response.ok) {
                 const data = await response.json();
-                setCreateButtonContent(<span>Successfully&nbsp;created</span>)
-
+                setWarning({
+                    message: "Your EC2 has been created successfully",
+                    type: "success",
+                    isShown: true
+                })
                 router.push("./")
             } else {
-                const errorData = await response.json();
-                alert("something went wrong ... 281 ");
-
+                setWarning({
+                    message: "something went wrong, please try again later or contact support [error : 728]",
+                    type: "danger",
+                    isShown: true
+                })
             }
         } catch (error) {
             alert("something went wrong ... 254 ");
@@ -185,13 +197,8 @@ export default function CreateEC2({ setConnected, setToken }) {
 
     };
 
-    const handleCreateSSHCheckBox = () => {
-        setCreateSSHKey(!createSSHKey);
-        keyNameRef.disabled = createSSHKey;
-    }
-
     return (
-        <div className=" d-flex align-items-center justify-content-center p-5">
+        <div className=" d-flex align-items-center justify-content-center p-5 tilt-warp-title">
             <div className="row d-flex justify-content-center align-items-center col-xl-4 col-lg-4 col-md-5 col-sm-10 col-xs-12">
                 <div className="col-lg-12 col-xl-11 border border-dark rounded mt-3">
                     <div
@@ -200,10 +207,10 @@ export default function CreateEC2({ setConnected, setToken }) {
                         <div className="card-body p-md-5 ">
                             <div className="row justify-content-center d-flex justify-content-center align-items-center">
                                 <div className="col-12">
-                                    <h3 className="text-center h3 mb-2 mx-1 mx-md-4">
-                                        create an EC2
-                                    </h3>
-                                    <form>
+                                    <form onSubmit={handleCreateEC2}>
+                                        <h3 className="text-center h3 mb-2 mx-1 mx-md-4">
+                                            create an EC2
+                                        </h3>
 
                                         <label className="form-label">
                                             account
@@ -213,9 +220,9 @@ export default function CreateEC2({ setConnected, setToken }) {
                                             id="account"
                                             name="account"
                                             value={eC2.account}
-
                                             className="form-select w-100 bg-light border-0"
                                             onChange={handleInputChange}
+                                            required
                                         > <option value="" defaultValue disabled>choose an existant account</option>
                                             {chooseFrom.accounts.map(name => (
                                                 <option key={name} value={name}>{name}</option>
@@ -224,7 +231,7 @@ export default function CreateEC2({ setConnected, setToken }) {
                                         <br />
                                         <br />
 
-                                        {separation("regional configuration")}
+                                        {separation("placement")}
 
                                         <label className="form-label">
                                             region
@@ -237,6 +244,7 @@ export default function CreateEC2({ setConnected, setToken }) {
                                             disabled={disabled.region}
                                             className="form-select w-100 bg-light border-0"
                                             onChange={handleInputChange}
+                                            required
                                         >
                                             <option value="" defaultValue disabled>Choose an installation region</option>
                                             {regions.map((region, index) => (
@@ -256,6 +264,7 @@ export default function CreateEC2({ setConnected, setToken }) {
                                             value={eC2.vPC}
                                             onChange={handleInputChange}
                                             disabled={disabled.vPC}
+                                            required
                                         >
                                             <option value="" defaultValue disabled>Choose a VPC</option>
                                             {chooseFrom.vPCs.length > 0 ? chooseFrom.vPCs.map(vPC => (
@@ -265,7 +274,7 @@ export default function CreateEC2({ setConnected, setToken }) {
                                                 </option>
 
 
-                                            )):<option disabled>there is no VPCs in the current region</option>}
+                                            )) : <option disabled>there is no VPCs in the current region</option>}
                                         </select>
                                         <br />
                                         <br />
@@ -280,6 +289,7 @@ export default function CreateEC2({ setConnected, setToken }) {
                                             value={eC2.subnet}
                                             disabled={disabled.subnet}
                                             onChange={handleInputChange}
+                                            required
                                         >
                                             <option value="" defaultValue disabled>Choose a subnet</option>
                                             {chooseFrom.subnets.length > 0 ? chooseFrom.subnets.map(subnet => (
@@ -288,7 +298,7 @@ export default function CreateEC2({ setConnected, setToken }) {
                                                     {subnet['CIDR Block']}
                                                 </option>
 
-                                            )):<option disabled>there is no Subnets in the current VPC</option>}
+                                            )) : <option disabled>there is no Subnets in the current VPC</option>}
                                         </select>
                                         <br />
                                         <br />
@@ -304,6 +314,7 @@ export default function CreateEC2({ setConnected, setToken }) {
                                             value={eC2.securityGroupe}
                                             onChange={handleInputChange}
                                             disabled={disabled.securityGroupe}
+                                            required
                                         >
                                             <option value="" defaultValue disabled>Choose a security groupe</option>
                                             {chooseFrom.securityGroups.length > 0 ? chooseFrom.securityGroups.map(securityGroup => (
@@ -311,13 +322,13 @@ export default function CreateEC2({ setConnected, setToken }) {
                                                     {securityGroup['GroupId']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                                                     {securityGroup['GroupName']}
                                                 </option>
-                                            )):<option disabled>there is no Security Groups in the current Region</option>}
+                                            )) : <option disabled>there is no Security Groups in the current Region</option>}
 
                                         </select>
                                         <br />
                                         <br />
 
-                                        {separation("instance configuration")}
+                                        {separation("Instance")}
                                         <select
                                             id="sSHKeyName"
                                             name="sSHKeyName"
@@ -325,8 +336,9 @@ export default function CreateEC2({ setConnected, setToken }) {
                                             value={eC2.sSHKeyName}
                                             onChange={handleInputChange}
                                             disabled={createSSHKey}
+                                            required
                                         >
-                                            <option value="ssh" defaultValue disabled>Choose an existant SSH key</option>
+                                            <option value="" defaultValue disabled>Choose an existant SSH key</option>
                                             {chooseFrom.sSHKeys.map(keyName => (
                                                 <option key={keyName} value={keyName} >
                                                     {keyName}
@@ -337,7 +349,11 @@ export default function CreateEC2({ setConnected, setToken }) {
                                         <br />
 
                                         <label className="form-label">
-                                            <input type="checkbox" style={{ accentColor: "black" }} checked={createSSHKey} onChange={handleCreateSSHCheckBox} />
+                                            <input
+                                                type="checkbox"
+                                                style={{ accentColor: "black" }}
+                                                checked={createSSHKey}
+                                                onChange={() => { setCreateSSHKey(!createSSHKey) }} />
                                             <span className="mx-1">Create new SSH key <small className="text-danger">(Erase any key with same name)</small></span>
                                         </label>
 
@@ -350,6 +366,7 @@ export default function CreateEC2({ setConnected, setToken }) {
                                             placeholder="my_custom_SSH_key_name"
                                             className="form-control mb-2"
                                             onChange={handleInputChange}
+                                            required={createSSHKey}
                                             disabled={!createSSHKey}
                                         />
                                         <br />
@@ -365,6 +382,7 @@ export default function CreateEC2({ setConnected, setToken }) {
                                             aria-label="Instance Size"
                                             className="form-select w-100 bg-light border-0"
                                             onChange={handleInputChange}
+                                            required
                                         >
                                             <option value="" defaultValue disabled>Choose a size</option>
                                             {sizes.map((size, index) => (
@@ -385,6 +403,7 @@ export default function CreateEC2({ setConnected, setToken }) {
                                             placeholder="my-web-server"
                                             className="form-control mb-2"
                                             onChange={handleInputChange}
+                                            required
                                         />
                                         <br />
 
@@ -400,7 +419,6 @@ export default function CreateEC2({ setConnected, setToken }) {
                                             name="toInstall"
                                             className="form-select w-100 bg-light border-0"
                                             value={eC2.toInstall}
-
                                             onChange={handleInputChange}
                                         >
                                             <option value="nothing" defaultValue disabled>Choose a software to install</option>
@@ -412,10 +430,8 @@ export default function CreateEC2({ setConnected, setToken }) {
                                         <br />
                                         <div className="d-flex justify-content-center mx-4 mt-5 mb-lg-4">
                                             <button
-                                                type="button"
+                                                type="submit"
                                                 className="btn btn-dark btn-lg"
-                                                onClick={handleCreateEC2}
-                                                disabled={!eC2ConfigIsComplete()}
                                             >
                                                 {createButtonContent}
                                             </button>

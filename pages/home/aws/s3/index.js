@@ -1,24 +1,24 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
 import { FullContext } from "../../../_app";
-import { getCredentials, getVPCs, regions } from "../../../../utils/functions";
+import { getCredentials, getS3s, regions } from "../../../../utils/functions";
 
-export default function VPC({ setWarning }) {
-    const { isConnected, token } = useContext(FullContext);
+export default function S3({ setWarning }) {
+    const { token } = useContext(FullContext);
     const router = useRouter();
 
     // State for filter and vpcs
-    const [filter, setFilter] = useState({ account: "", region: "", accounts: [], vPCs: [] });
+    const [filter, setFilter] = useState({ account: "", region: "", accounts: [], s3s: [] });
 
     // Effect to fetch account names when component mounts
     useEffect(() => {
-        getCredentials(token, setFilter);
-    }, []);
+        token && getCredentials(token, setFilter);
+    }, [token]);
 
     // Effect to fetch vpcs when filter changes
     useEffect(() => {
         if (filter.account && filter.region)
-            getVPCs(token, filter.region, filter.account, setFilter)
+            getS3s(token, filter.region, filter.account, setFilter)
     }, [filter.account, filter.region]);
 
     // Handle input change for filter
@@ -27,32 +27,31 @@ export default function VPC({ setWarning }) {
         setFilter(prevFilter => ({ ...prevFilter, [name]: value }));
     };
 
-    // Handle VPC action <------
-    const handleDeleteVPC = async (vPCId) => {
+    // Handle S3 action <------
+    const handleDeleteS3 = async (bucket) => {
         const actionConfig = new FormData();
 
         actionConfig.append("token", token);
         actionConfig.append("region", filter.region);
         actionConfig.append("uniqueName", filter.account);
-        actionConfig.append("vPCId", vPCId);
+        actionConfig.append("bucketName", bucket);
 
         try {
             const response = await fetch(
-                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/vpc/`, {
+                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/s3/`, {
                 method: "DELETE",
                 body: actionConfig,
             });
             if (response.ok) {
-                const data = await response.json();
                 setWarning({
-                    message: "VPC deleted successfully ",
-                    type:"success",
+                    message: "bucket deleted successfully",
+                    type: "success",
                     isShown: true
                 })
-                setFilter(prevConfig => ({ ...prevConfig, vPCs: filter.vPCs.filter(vPC => vPC['VPC ID'] !== vPCId) }))
+                setFilter(prevConfig => ({ ...prevConfig, s3s: filter.s3s.filter(s3 => s3['name'] !== bucket) }))
             } else {
                 setWarning({
-                    message: "Something went wrong, please try again later or contact support [error : 876]",
+                    message: "something went wrong, please try again later or contact support, [error : 941] ",
                     type: "danger",
                     isShown: true
                 })
@@ -99,7 +98,7 @@ export default function VPC({ setWarning }) {
                                         ))}
                                     </select>
                                 </div>
-                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getVPCs(token, filter.region, filter.account, setFilter) }} disabled={!(filter.account && filter.region)}>
+                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getS3s(token, filter.region, filter.account, setFilter) }} disabled={!(filter.account && filter.region)}>
                                     <i className="bi bi-arrow-clockwise"></i>
                                 </button>
                             </div>
@@ -107,31 +106,25 @@ export default function VPC({ setWarning }) {
                                 <table className="table table-bordered table-striped">
                                     <thead className="thead-dark">
                                         <tr>
-                                            <th className="text-center">ID</th>
                                             <th className="text-center">Name</th>
-                                            <th className="text-center">Network Address</th>
-                                            <th className="text-center">Mask</th>
+                                            <th className="text-center">Number of objects</th>
                                             <th className="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filter.vPCs.length > 0 ? (filter.vPCs.map((vPC) => (
-                                            <tr key={vPC['VPC ID']}>
-                                                <td className="text-center">{vPC['VPC ID']}</td>
-                                                <td className="text-center">{vPC['Name']}</td>
-                                                <td className="text-center">{vPC['CIDR Block'].split('/')[0]}</td>
-                                                <td className="text-center">{vPC['CIDR Block'].split('/')[1]}</td>
+                                        {filter.s3s.length > 0 ? (filter.s3s.map((bucket, index) => (
+                                            <tr key={index}>
+                                                <td className="text-center">{bucket['name']}</td>
+                                                <td className="text-center">{bucket['storedObjects']}</td>
                                                 <td className="text-center">
-                                                    <button className="btn mx-1 btn-danger" title="Delete" onClick={() => handleDeleteVPC(vPC['VPC ID'])} disabled={vPC['Name'] === "default"}>
+                                                    <button className="btn mx-1 btn-danger" title="Delete" onClick={() => handleDeleteS3(bucket['name'])}>
                                                         <i className="bi bi-trash"></i>
                                                     </button>
                                                 </td>
                                             </tr>
                                         ))) : (
                                             <tr>
-                                                <td>There is no VPCs</td>
-                                                <td className="text-center">-</td>
-                                                <td className="text-center">-</td>
+                                                <td>There is no Buckets</td>
                                                 <td className="text-center">-</td>
                                                 <td className="text-center">-</td>
                                             </tr>
@@ -139,10 +132,8 @@ export default function VPC({ setWarning }) {
                                         <tr className="bg-dark">
                                             <td></td>
                                             <td></td>
-                                            <td></td>
-                                            <td></td>
-                                            <td colSpan="4" className="px-2 w-100 btn btn-success" onClick={() => { router.push('./vpc/create'); }}>
-                                                <i className="bi bi-cloud-plus p-2"></i>Create a VPC
+                                            <td colSpan="4" className="px-2 w-100 btn btn-success" onClick={() => { router.push('./s3/create'); }}>
+                                                <i className="bi bi-cloud-plus p-2"></i>Create a Bucket
                                             </td>
                                         </tr>
                                     </tbody>

@@ -1,6 +1,5 @@
 import { useRouter } from "next/router";
 import { Card, CardHeader, CardBody, Image } from "@nextui-org/react";
-import { useEffect } from "react";
 import ProfileNavbar from '../../../comps/ProfileNavbar.js'; // Importing the profile component
 
 export default function profile() {

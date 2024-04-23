@@ -1,70 +1,165 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/router';
 import { usePathname } from 'next/navigation'
-import React from 'react';
-import Header from "../comps/Header";
 import "../styles/globals.scss";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { useRouter } from 'next/router';
+import Header from "../comps/Header";
 import Warning from '../comps/Warning';
 import Router from '../comps/Router';
+import Footer from '../comps/Footer';
+import { getPersonnalInfo } from '../utils/functions';
+import { spinner } from '@nextui-org/react';
 
 
 function MyApp({ Component, pageProps }) {
-  const [token, setToken] = useState("");
-  const router = useRouter();
-  
-  // Keep tracking history & logic of connection
-  const allowedPagesWhileDisconnected = ["/", "/login", "/signup"];
-  const pathname = usePathname();
-  const [previousPathname, setPreviousPathname] = useState('');
-  
-  // Warning
-  const [warning, setWarning] = useState(
-    {
-      message: "something went wrong ... ",
-      type: "warning",  // Warning - success - danger
-      isShown: false
-    }
-  )
-  const params = { token };
+  const [token, setToken] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState("");
+  const [sessionExpireAt, setSessionExpireAt] = useState(0);
 
-  // Only to keep tracking of routing system
-  const handleRouteChange = (url) => {
-    var storedToken;
-    if (!previousPathname) { // Page reloaded detected
-      if (typeof window !== 'undefined' && localStorage) { // Check for window and localStorage availability
-        storedToken = localStorage.getItem('token');
-        storedToken && setToken(storedToken);
-      }else{
-        console.warn("local storage is not available");
+  const [username, setUsername] = useState("");
+
+  const router = useRouter();
+
+  // Keep track of history & logic of connection
+  const allowedPagesWhileDisconnected = ['/', '/login', '/signup'];
+  const pathname = usePathname();
+
+  // Warning
+  const [warning, setWarning] = useState({
+    message: '',
+    type: '', // Warning - success - danger
+    isShown: false
+  });
+
+  const AuthContext = { token, isLoggedIn, pathname };
+
+  // Get name of user on token change into valid value (setup)
+  useEffect(() => {
+    if (token) {
+      if (token === "expired") {
+        setIsLoggedIn(false)
+        disconnect("your session has expired, please re-login");
+      } else {
+        setIsLoggedIn(true)
+        getPersonnalInfo(token, setUsername, true).then((isOk) => {
+          !isOk && setToken("expired");
+        }) // True => get name only, get infos if token is valide
       }
     }
-    setPreviousPathname(url);
-    if (allowedPagesWhileDisconnected.includes(url) && storedToken) {
-      router.push("/home"); // Redirect to home if logged in
+  }, [token])
+
+  // Kick out anauthorized access to loggedIn templates
+  useEffect(() => {
+    if (!(isLoggedIn || allowedPagesWhileDisconnected.includes(pathname))) {
+      router.push("/");
+    }
+  }, [isLoggedIn])
+
+
+  const [loading, setLoading] = React.useState(false);
+
+  useEffect(() => {
+    // Restore session if refresh & loggedIn
+    const RestoreSession = async () => {
+      const localExpirationTime = localStorage.getItem("sessionExpireAt")
+      const localToken = localStorage.getItem("token");
+      if (localToken && localExpirationTime) {
+        const tokenStillValid = ((new Date).getTime() < localExpirationTime)
+        if (tokenStillValid) {
+          getPersonnalInfo(localToken, setUsername, true)
+            .then((isOk) => {
+              if (isOk) {
+                setToken(localToken)
+                setSessionExpireAt(localExpirationTime)
+                setIsLoggedIn(true)
+              } else {
+                setToken("expired")
+              }
+            })
+
+        }
+      }
+    }
+    RestoreSession()
+
+    //Loader Animation
+    const handleStart = () => setLoading(true);
+    const handleComplete = () => setLoading(false);
+
+    router.events.on('routeChangeStart', handleStart);
+    router.events.on('routeChangeComplete', handleComplete);
+    router.events.on('routeChangeError', handleComplete);
+
+    return () => {
+      router.events.off('routeChangeStart', handleStart);
+      router.events.off('routeChangeComplete', handleComplete);
+      router.events.off('routeChangeError', handleComplete);
+    };
+
+  }, []);
+
+
+  async function disconnect(reason) { //if  reason === undefind => user disconnected // reason === expired => token is dead 
+    try {
+      //delete token from server
+      const response = await fetch(
+        `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/users/?` +
+        new URLSearchParams({
+          token: token,
+          logout: true
+        }),
+        {
+          method: "DELETE",
+        }
+      );
+      if (response.ok) {
+        setIsLoggedIn(false)
+        setSessionExpireAt(null)
+        setToken(null)
+        localStorage.removeItem("token")
+        localStorage.removeItem("sessionExpireAt")
+        router.push("/")
+        setWarning({
+          message: reason ? reason : "See you soon !",  //dont show any sign of existing account !
+          type: reason ? "warning":"success",
+          isShown: true
+        })
+        return true;
+      }
+    } catch (err) {
+      console.error(err)
+      return false
     }
   }
-  useEffect(() => {
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => {
-      router.events.off('routeChangeComplete', handleRouteChange);
-    };
-  }, [previousPathname, router]);
-  useEffect(() => {
-    handleRouteChange(pathname);
-  }, [])  //refresh detect
 
   return (
     <>
-      <FullContext.Provider value={params}>
-        <Warning warning={warning} setWarning={setWarning} />
-        <Header setToken={setToken} setWarning={setWarning}/>
-        {previousPathname && <Router currentPath={previousPathname} />}
-        <Component setToken={setToken} setWarning={setWarning} {...pageProps} />
+      <Warning warning={warning} loading={loading} setWarning={setWarning} />
+      {loading && Loader()}
+      <FullContext.Provider value={AuthContext}>
+        <Header disconnect={disconnect} username={username} />
+        {isLoggedIn && <Router currentPath={pathname} />}
+        <div style={{ minHeight: "100vh" }} className='d-flex flex-column justify-content-between'>
+          <div>
+            <Component setToken={setToken} setWarning={setWarning} setSessionExpireAt={setSessionExpireAt} {...pageProps} />
+          </div>
+          <div>
+            <Footer />
+          </div>
+        </div>
       </FullContext.Provider>
     </>
   );
 }
+const Loader = () => {
+  return (
+    <div className=" d-flex justify-content-center align-items-center bg-light position-fixed vw-100" style={{ height: "calc(100vh - 80px)", bottom: "0", zIndex: "13" }}>
+      <p className='loader'></p>
+    </div>
+  );
+};
+
+
 export const FullContext = React.createContext({});
 export default MyApp;

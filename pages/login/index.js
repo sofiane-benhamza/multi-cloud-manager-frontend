@@ -1,12 +1,12 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useRouter } from "next/router";
 import { FullContext } from "../_app";
 import { separation, validateEmail } from "../../utils/functions";
 
-export default function Login({ setToken, setWarning }) {
+export default function Login({ setToken, setWarning, setSessionExpireAt }) {
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
-    const { token } = useContext(FullContext);
+    const { isLoggedIn } = useContext(FullContext);
     const router = useRouter();
 
     const handleInputChange = (e) => {
@@ -48,29 +48,43 @@ export default function Login({ setToken, setWarning }) {
 
             if (response.ok) {
                 const data = await response.json();
-                setToken(data.token);
-                localStorage.setItem("token", data.token); // Corrected the token storage
                 setWarning({
                     message: "Welcome back !",
                     type: "success",
                     isShown: true
                 })
-                router.push('/home');
+                router.push("/home")
+                const expirationTime = new Date().getTime() + 600000; // Current time + 1 hour (in ms)
+                setToken(data.token);
+                localStorage.setItem("token",data.token)
+                setSessionExpireAt(expirationTime)
+                localStorage.setItem("sessionExpireAt",expirationTime)
             } else {
                 setWarning({
-                    message: "The password you have entered is incorrect",  //dont show any sign of existing account !
+                    message: "please check your email and password",  //dont show any sign of existing account !
                     type: "danger",
                     isShown: true
                 })
                 setPassword("");
             }
         } catch (error) {
-            console.error("An error occurred while connecting");
+            console.error("An error occurred while connecting", error);
+            setWarning({
+                message: "something went wrong, please try again later or contact support [error code ... 943].",
+                type :"danger",
+                isShown: true
+            })
         }
     };
 
+    useEffect(()=>{
+        if(isLoggedIn){
+            router.push("/home");
+        }
+    },[isLoggedIn])
+
     return (
-        <div className="d-flex justify-content-center ">
+        <div className="d-flex justify-content-center mt-5">
             <div className="d-flex justify-content-center align-items-center">
                 <div className="col-12 border border-dark rounded mt-3">
                     <div className="bg-transparent text-dark rounded">
@@ -78,7 +92,7 @@ export default function Login({ setToken, setWarning }) {
                             <div className="row justify-content-center d-flex justify-content-center align-items-center">
                                 <div className="col-12">
                                     <h2 className="text-center h2 mb-2 mx-1 my-4 md-4 tilt-warp-title">
-                                        <i className="bi bi-people mr-3"></i>
+                                        <i className="bi bi-people-fill mr-3"></i>
                                         Let's Connect
                                     </h2>
                                     <form onSubmit={handleConnect} className="tilt-warp-title h6">
@@ -112,12 +126,13 @@ export default function Login({ setToken, setWarning }) {
                                         <div className="d-flex justify-content-center mx-4 mb-3 mb-lg-4">
                                             <button
                                                 type="submit"
-                                                className="btn btn-dark btn-lg inverse-hover"
+                                                className="btn btn-dark btn-lg"
                                             >
                                                 Connect
                                             </button>
                                         </div>
                                         <input type="checkbox" style={{ accentColor: "black" }} />&nbsp;&nbsp;&nbsp;Remember this device
+                                        <p className="text-right mt-4"><span className="cursor-pointer hover-underline-black">Forgot password ?</span></p>
                                         {separation("continue with")}
                                         <p className="btn btn-dark w-100"><i className="bi bi-github mr-3"></i>github</p>
                                         <p className="btn btn-light border border-dark w-100"><i className="bi bi-google mr-3"></i>google</p>
@@ -129,5 +144,6 @@ export default function Login({ setToken, setWarning }) {
                 </div>
             </div>
         </div>
+        
     );
 }

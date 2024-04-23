@@ -1,7 +1,6 @@
-async function getCredentials(token, setChooseFrom, getFull) {
-    if (!(token && setChooseFrom)) {
-        return false;
-    }
+async function getCredentials(token, setChooseFrom, getFullCredentials) {
+    if (!token)
+        return false
     try {
         const response = await fetch(
             "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/cloud/?token=" + token,
@@ -12,13 +11,10 @@ async function getCredentials(token, setChooseFrom, getFull) {
 
         if (response.ok) {
             const data = await response.json();
-            if (!getFull) {
-                const names = data.map(item => item.uniqueName);
-                setChooseFrom((prevState) => ({
-                    ...prevState,
-                    accounts: names,
-                }))
-            } else {
+
+            if (data.message) return true ///the case where there is credentials yet
+
+            if (getFullCredentials) {
                 const accounts = data.map(item => ({
                     id: item.uniqueName,
                     accessKeyId: item.accessKeyId,
@@ -26,103 +22,167 @@ async function getCredentials(token, setChooseFrom, getFull) {
                     cloud: item.cloud
                 }));
                 setChooseFrom(accounts);
+            } else { // Only IDs
+                const names = data.map(item => item.uniqueName);
+                setChooseFrom((prevState) => ({
+                    ...prevState,
+                    accounts: names,
+                }))
             }
-        } else {
-            tokenHasExpired();
+            return true;
         }
+        return false;
     } catch (error) {
-        console.error("something went wrong");
+        console.error("something went wrong ", error);
+        return true
     }
-}
+}   // would you like to set up an account
 
 async function getVPCs(token, region, account, setChooseFrom) {
+    if (!token)
+        return false
     try {
         const response = await fetch(
-            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/vpc/?token=" + token + "&region=" + region + "&uniqueName=" + account,
+            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/vpc/?" +
+            new URLSearchParams({
+                token: token,
+                region: region,
+                uniqueName: account
+            }),
             {
                 method: "GET",
             }
         );
         if (response.ok) {
-            const data = await response.json();
+            let data = await response.json();
+            if (data.length == 0) {
+                data = [{
+                    "VPC ID": "There is no VPCs",
+                    "Name": "-",
+                    "CIDR Block": "-/-"
+                }]
+            }
             setChooseFrom((prevState) => ({
                 ...prevState,
                 vPCs: data
             }));
+
+            return true
         }
+        return false;
     } catch (error) {
-        console.error("something went wrong")
+        console.error("something went wrong");
+        return false;
     }
 }
 
-async function getSubnets(token, region, account, vpc, setChooseFrom) {
+async function getSubnets(token, region, account, setChooseFrom) {
+    if (!token)
+        return false
     try {
         const response = await fetch(
-            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/subnet/?token=" + token + "&region=" + region + "&uniqueName=" + account + "&vpc=" + vpc,
+            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/subnet/?" +
+            new URLSearchParams({
+                token: token,
+                region: region,
+                uniqueName: account
+            }),
             {
                 method: "GET",
             }
         );
         if (response.ok) {
-            const data = await response.json();
-
+            let data = await response.json();
+            if (data.length == 0) {
+                data = [{
+                    "Subnet ID": "there is no Subnets in the current VPC",
+                    "VPC ID": "-",
+                    "CIDR Block": ""
+                }]
+            }
             setChooseFrom((prevState) => ({
                 ...prevState,
                 subnets: data
             }))
+            return true;
         }
+        return false;
     } catch (error) {
         console.error("something went wrong");
+        return false;
     }
 }
 
 async function getSecurityGroups(token, region, account, setChooseFrom) {
+    if (!token)
+        return false
     try {
         const response = await fetch(
-            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/security_groupe/?token=" + token + "&region=" + region + "&uniqueName=" + account,
+            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/security_group/?token=" + token + "&region=" + region + "&uniqueName=" + account,
             {
                 method: "GET",
             }
         );
         if (response.ok) {
-            const data = await response.json();
+            let data = await response.json();
+            if (data.length == 0) {
+                data = [{
+                    groupId: "There is security groups",
+                    groupName: "-",
+                    vpcId: "-"
+                }]
+            }
             setChooseFrom((prevState) => ({
                 ...prevState,
                 securityGroups: data
             }));
+            return true
         }
+        return false
     } catch (error) {
         console.error("something went wrong");
+        return false
     }
 }
 
 async function getSSHKeys(token, account, setChooseFrom) {
+    if (!token)
+        return false
     try {
         const response = await fetch(
-            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/ssh_keys/?token=" + token + "&uniqueName=" + account,
+            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/ssh_keys/?" +
+            new URLSearchParams({
+                token: token,
+                uniqueName: account
+            }),
             {
                 method: "GET",
             }
         );
         if (response.ok) {
-            const data = await response.json();
+            let data = await response.json();
+            if (data.length == 0) {
+                data = ["There is no SSH keys"]
+            }
             setChooseFrom((prevState) => ({
                 ...prevState,
-                sSHKeys: data
-            }));
+                subnets: data
+            }))
+            return true;
         }
+        return false
     } catch (error) {
         console.error("something went wrong");
+        return false
     }
 }
 
+// Returns True if token are good, False otherwise
 async function getPersonnalInfo(token, setPersonnalInfo, getNameOnly) {
-    if (!(token && setPersonnalInfo))
-        return false;
-    try {
-        const formData = new FormData();
-        formData.append("token", token);
+    if (!token)
+        return false
 
+    try {
         const response = await fetch(
             `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/users/?token=${token}`,
             {
@@ -130,85 +190,153 @@ async function getPersonnalInfo(token, setPersonnalInfo, getNameOnly) {
             }
         );
 
-        if (!response.ok) {
-            console.error("token expired");
-            localStorage.removeItem('token');
-            return false;
+        if (response.ok) {
+            const data = await response.json();
+            if (getNameOnly) {
+                data && setPersonnalInfo(data.fname);
+            } else {
+                data && setPersonnalInfo({
+                    fname: data.fname,
+                    lname: data.lname,
+                    email: data.email,
+                    role: data.role
+                });
+            }
+            return true;
         }
-        const data = await response.json();
-        if (getNameOnly) {
-            data && setPersonnalInfo({
-                fname: data.fname
-            });
-        } else {
-            data && setPersonnalInfo({
-                fname: data.fname,
-                lname: data.lname,
-                email: data.email,
-                role: data.role
-            });
-        }
-        return true;
+
+        return false
 
     } catch (error) {
         console.error("something went wrong")
+        return false
     }
 };
 
 async function getEC2s(token, account, region, setResult) {
+    if (!token)
+        return false
     try {
-        const response = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/ec2/?token=${token}&uniqueName=${account}&region=${region}`);
-        if (!response.ok) throw new Error(`Failed to fetch EC2 instances: ${response.status}`);
-        let data = await response.json();
-        if (data.length == 0)
-            data = [{ name: "there is no instances", id: "-", size: "-", privateIp: "-", publicIp: "-" }]
-        setResult((prevState) => ({
-            ...prevState,
-            instances: data,
-        }))
+        const response = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/ec2/?` + new URLSearchParams({
+            token: token,
+            uniqueName: account,
+            region: region
+        }), {
+            method: 'GET'
+        });
+        if (response.ok) {
+
+
+            let data = await response.json();
+            if (data.length == 0)
+                data = [{ id: "there is no instances", name: "-", state: "-", size: "-", privateIp: "-", publicIp: "-" }]
+            setResult((prevState) => ({
+                ...prevState,
+                instances: data,
+            }))
+            return true
+        }
+        return false
     } catch (error) {
         console.error("something went wrong");
+        return false
+    }
+};
+
+async function getECSs(token, account, region, setResult) {
+    if (!token)
+        return false
+    try {
+        const response = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/ecs/?` + new URLSearchParams({
+            token: token,
+            uniqueName: account,
+            region: region
+        }), {
+            method: 'GET'
+        });
+        if (response.ok) {
+            let data = await response.json();
+            if (data.length == 0)
+                data = [{ name: "there is no clusters", tasks:[],  services: [], containerInstances: [] }]
+            setResult((prevState) => ({
+                ...prevState,
+                clusters: data,
+            }))
+            return true
+        }
+        return false
+    } catch (error) {
+        console.error("something went wrong");
+        return false
     }
 };
 
 async function getS3s(token, region, account, setChooseFrom) {
+    if (!token)
+        return false
     try {
-        const response = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/s3/?token=${token}&uniqueName=${account}&region=${region}`);
-        if (!response.ok) throw new Error(`Failed to fetch EC2 instances: ${response.status}`);
-        const data = await response.json();
-        let newData = [];
-        for (const [key, value] of Object.entries(data)) {
-            newData.push({ name: key, storedObjects: value });
-        }
-        setChooseFrom((prevState) => ({
-            ...prevState,
-            s3s: newData,
-        }))
-    } catch (error) {
-        console.error("something went wrong");
-    }
-}
+        const response = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/s3/?` + new URLSearchParams({
+            token: token,
+            uniqueName: account,
+            region: region
+        }), {
+            method: 'GET'
+        });
 
-async function handleDisconnect(token) {
-    try {
-        const form = new FormData();
-        form.append("token", token);
-        form.append("logout", "true");
-
-        const response = await fetch(
-            `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/users/`,
-            {
-                method: "DELETE",
-                body: form,
-            }
-        );
         if (response.ok) {
-            localStorage.removeItem('token');
+            const data = await response.json();
+            let newData = [];
+            for (const [key, value] of Object.entries(data)) {
+                newData.push({ name: key, storedObjects: value });
+            }
+            if (newData.length == 0) {
+                newData = [{ name: "There is no Buckets", storedObjects: "-" }]
+            }
+            setChooseFrom((prevState) => ({
+                ...prevState,
+                s3s: newData,
+            }))
+            return true
         }
+        return false
     } catch (error) {
         console.error("something went wrong");
+        return false
     }
 }
+
+async function getRDSs(token, account, region, setResult) {
+    if (!token)
+        return false
+    try {
+        const response = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/rds/?` + new URLSearchParams({
+            token: token,
+            uniqueName: account,
+            region: region,
+            service: "databases"
+
+        }), {
+            method: 'GET'
+        });
+
+        if (response.ok) {
+            let data = await response.json();
+            if (data.length == 0) {
+                data = [{ databaseName: "there is no databases", engine: "-", state: "-", totalSize: "-", address: "-", port: "-", takenSize: "-", publicIp: "-" }]
+            }
+            setResult((prevState) => ({
+                ...prevState,
+                databases: data,
+            }))
+            return true
+        }
+        return false;
+    } catch (error) {
+        console.error("something went wrong", error);
+        return false
+    }
+};
+
 // Static functions
 
 function validateEmail(email) {
@@ -247,10 +375,13 @@ const sizes = [
 ];
 
 const regions = [
-    "us-east-1", "us-east-2", "us-east-3", "us-west-1", "us-west-2",
+    "us-east-1", "us-east-2", "us-west-1", "us-west-2",
     "ca-central-1",
-    "eu-central-1", "eu-west-1", "eu-west-2", "eu-west-3", "eu-north-1"
+    "eu-central-1", "eu-west-1", "eu-west-2", "eu-west-3", "eu-north-1",
+    "sa-east-1"
 ];
 
-export { getEC2s, getS3s, getCredentials, getVPCs, getSubnets, getSecurityGroups, getSSHKeys, getPersonnalInfo, handleDisconnect, validateIPAddress, validateEmail, separation, sizes, regions };
+const wait = <div className="spinner-border text-primary" role="status">   <span className="sr-only"></span> </div>
+
+export { getEC2s, getECSs, getRDSs, getS3s, getCredentials, getVPCs, getSubnets, getSecurityGroups, getSSHKeys, getPersonnalInfo, validateIPAddress, validateEmail, separation, sizes, regions, wait };
 

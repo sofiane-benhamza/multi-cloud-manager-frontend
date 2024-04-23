@@ -5,9 +5,9 @@ import { Card, CardHeader, CardBody } from "@nextui-org/react";
 import { useEffect, useContext, useState } from "react";
 import ProfileNavbar from '../../../comps/ProfileNavbar.js'; // Importing the profile component
 import { FullContext } from "../../_app";
-import { getCredentials  } from "../../../utils/functions"
+import { getCredentials } from "../../../utils/functions"
 
-export default function ProfileCredentials({setWarning}) {
+export default function ProfileCredentials({ setWarning }) {
     const { token } = useContext(FullContext);
     const router = useRouter();
     const [addCredentialActive, setAddCredentialActive] = useState(false);
@@ -34,6 +34,7 @@ export default function ProfileCredentials({setWarning}) {
 
     const submitCredential = async (e) => {
         e.preventDefault();
+        e.target.reset();
         try {
             const form = new FormData();
             form.append("token", token);
@@ -49,22 +50,21 @@ export default function ProfileCredentials({setWarning}) {
             );
 
             if (response.ok) {
-                const data = await response.json();
                 setWarning({
                     message: "Credentials saved succesfully",
-                    type:"success",
+                    type: "success",
                     isShown: true
                 })
                 setAccounts([...accounts, {
                     id: 'will be generated',
-                    accessKeyId: newAccount.accessKeyId,
-                    secretAccessKey: newAccount.secretAccessKey,
+                    accessKeyId: newAccount.accessKeyId.substring(1, 4) + "-XXXXXXXXXXX",
+                    secretAccessKey: newAccount.secretAccessKey.substring(1, 4) + "-XXXXXXXXXXX",
                     cloud: newAccount.cloud
                 }])
-            }else{
+            } else {
                 setWarning({
                     message: "Something went wrong, please try again later or contact support [error : 981]",
-                    type:"danger",
+                    type: "danger",
                     isShown: true
                 })
             }
@@ -74,22 +74,23 @@ export default function ProfileCredentials({setWarning}) {
 
 
     }
+    
     const deleteCredential = async (id) => {
         try {
-            const credential = new FormData();
-            credential.append("token", token);
-            credential.append("uniqueName", id)
             const response = await fetch(
-                "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/cloud/",
+                "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/cloud/"+
+                new URLSearchParams({
+                    token: token,
+                    uniqueName: id,
+                }),
                 {
                     method: "DELETE",
-                    body: credential
                 }
             );
             if (response.ok) {
                 setWarning({
-                    message:"Credentials deleted successfully",
-                    type:"success",
+                    message: "Credentials deleted successfully",
+                    type: "success",
                     isShown: true
                 })
                 // Filter out the item with the id to delete
@@ -99,7 +100,7 @@ export default function ProfileCredentials({setWarning}) {
             } else {
                 setWarning({
                     message: "Something went wrong, please try again later or contact support [error : 983]",
-                    type:"danger",
+                    type: "danger",
                     isShown: true
                 })
             }
@@ -198,8 +199,8 @@ export default function ProfileCredentials({setWarning}) {
                                         <input
                                             type="text"
                                             className="w-100"
-                                            minLength={8}
                                             defaultValue={newAccount.accessKeyId}
+                                            minLength={8}
                                             onBlur={(e) => { setNewAccount(prevState => ({ ...prevState, accessKeyId: e.target.value })); e.target.focus() }}
                                             required
                                         />
@@ -225,7 +226,10 @@ export default function ProfileCredentials({setWarning}) {
             <Card className="col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12 d-flex align-items-center">
 
                 <div className="w-100 h-100 d-flex justify-content-center align-items-center">
-                    <h2 className="btn btn-success" onClick={() => { setAddCredentialActive(true) }}>
+                    <h2 className="btn btn-success"
+                        onClick={() => {
+                            setAddCredentialActive(true);
+                        }}>
                         Add Credentials<br />
                         <i className="bi bi-terminal-plus h1"></i>
                     </h2>

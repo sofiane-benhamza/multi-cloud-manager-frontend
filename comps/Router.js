@@ -17,12 +17,12 @@ function Router({ currentPath }) {
     }
 
     return (
-        <div className="border border-dark rounded mt-2 py-2 text-light tilt-warp-title h5" style={{ width: "90%", marginLeft: "5%", background: "black" }}>
-            <i class="ml-3 bi bi-router-fill"></i>
+        <div className="border border-dark rounded mt-2 py-2 text-light tilt-warp-title h6" style={{ width: "90%", marginLeft: "5%", background: "black" }}>
+            <i className="ml-3 bi bi-router-fill"></i>
             {pathSegments.map((segment, index) => (
                 <React.Fragment key={index}>
-                    <span className="mx-4" onClick={() => setRoute(index)} style={{ cursor: 'pointer' }}>{segment}</span>
-                    {index !== pathSegments.length - 1 && <span className="mx-2">{<i class="bi bi-caret-right-fill" />}</span>}
+                    <span className="mx-3" onClick={() => setRoute(index)} style={{ cursor: 'pointer' }}>{segment.replace("_"," ")}</span>&nbsp;
+                    {index !== pathSegments.length - 1 && <span className="ml-1">{<i className="bi bi-caret-right-fill" />}</span>}
                 </React.Fragment>
             ))}
         </div>

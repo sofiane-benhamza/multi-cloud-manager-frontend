@@ -7,6 +7,8 @@ export default function CreateVPC({ setWarning, setToken }) {
     const { token } = useContext(FullContext);
     const router = useRouter();
 
+    const [terminalOutput, setTerminalOutput] = useState("");
+
     // VPC configuration
     const [vPC, setVPC] = useState({
         account: "",
@@ -38,10 +40,9 @@ export default function CreateVPC({ setWarning, setToken }) {
 
     //reference of input of keyname
     useEffect(() => { // Call get credentials
-        const getAccounts = async () => {
-            await getCredentials(token, setChooseFrom);
-        };
-        getAccounts();
+        getCredentials(token, setChooseFrom).then((isOk) => {
+            if (!isOk) setToken("expired")
+        });;
     }, [token]);
 
     // Can not be optimized cause, calling functions time to time
@@ -96,8 +97,13 @@ export default function CreateVPC({ setWarning, setToken }) {
         }
     };
 
-    const handleCreateVPC = async () => {
+    const handleCreateVPC = async (e) => {
+        e.preventDefault();
+        if(!vPCConfigIsComplete()){
+            return false
+        }
         setCreateButtonContent(<span><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> please wait</span>);
+
         try {
             const vPCConfiguration = new FormData();
             vPCConfiguration.append("token", token); //token authentication
@@ -115,25 +121,25 @@ export default function CreateVPC({ setWarning, setToken }) {
                     body: vPCConfiguration,
                 }
             );
+            const data = await response.json();
             if (response.ok) {
-                const data = await response.json();
                 setWarning({
-                    message:"Virtual private cloud created succesfully",
-                    type:"success",
-                    isShown:true
+                    message: "Virtual private cloud created succesfully",
+                    type: "success",
+                    isShown: true
                 })
-                router.push("./")
+                setTerminalOutput(data.stdOut);
             } else {
-                const errorData = await response.json();
                 setWarning({
-                    message:"Something went wrong, please try again later or contact support [error : 879]",
-                    type:"warning",
-                    isShown:true
+                    message: "Something went wrong, please try again later or contact support [error : 879]",
+                    type: "warning",
+                    isShown: true
                 })
+                setTerminalOutput(data.stdErr);
 
             }
         } catch (error) {
-           console.error("something went wrong")
+            console.error("something went wrong")
         } finally {
             setCreateButtonContent(<span>Create</span>)
         }
@@ -153,7 +159,7 @@ export default function CreateVPC({ setWarning, setToken }) {
                                     <h3 className="text-center h3 mb-2 mx-1 mx-md-4">
                                         create a VPC
                                     </h3>
-                                    <form>
+                                    <form onSubmit={handleCreateVPC}>
 
                                         <label className="form-label">
                                             Account
@@ -166,6 +172,7 @@ export default function CreateVPC({ setWarning, setToken }) {
 
                                             className="form-select w-100 bg-light border-0"
                                             onChange={handleInputChange}
+                                            required
                                         > <option value="" defaultValue disabled>choose an existant account</option>
                                             {chooseFrom.accounts.map(name => (
                                                 <option key={name} value={name}>{name}</option>
@@ -184,6 +191,7 @@ export default function CreateVPC({ setWarning, setToken }) {
                                             disabled={disabled.region}
                                             className="form-select w-100 bg-light border-0"
                                             onChange={handleInputChange}
+                                            required
                                         >
                                             <option value="" defaultValue disabled>Choose an installation Region</option>
                                             {regions.map((region, index) => (
@@ -203,6 +211,7 @@ export default function CreateVPC({ setWarning, setToken }) {
                                             placeholder="my-dev-vpc"
                                             disabled={disabled.vPCInfo}
                                             className="form-select w-100 bg-light border-0"
+                                            required
                                         />
                                         <br />
                                         <br />
@@ -218,15 +227,16 @@ export default function CreateVPC({ setWarning, setToken }) {
                                                             if (!validateIPAddress(vPC.networkAddress)) {
                                                                 setVPC((prevConfig) => ({ ...prevConfig, networkAddress: "" }));
                                                                 setWarning({
-                                                                    message:"Please enter a valid network address",
-                                                                    type:"warning",
-                                                                    isShown:true
+                                                                    message: "Please enter a valid network address",
+                                                                    type: "warning",
+                                                                    isShown: true
                                                                 })
                                                             }
                                                         }}
                                                         value={vPC.networkAddress} className="form-control"
                                                         placeholder="10.0.0.0"
                                                         disabled={disabled.vPCInfo}
+                                                        required
                                                     />
                                                 </div>
                                             </div>
@@ -240,9 +250,9 @@ export default function CreateVPC({ setWarning, setToken }) {
                                                         onBlur={() => {
                                                             if (!(vPC.mask > 15 && vPC.mask < 29)) {
                                                                 setWarning({
-                                                                    message:"Please enter a valide mask, digits from 16 to 28 only are accepted",
-                                                                    type:"warning",
-                                                                    isShown:true
+                                                                    message: "Please enter a valide mask, digits from 16 to 28 only are accepted",
+                                                                    type: "warning",
+                                                                    isShown: true
                                                                 })
                                                                 setVPC(prevConfig => ({ ...prevConfig, mask: 16 }));
                                                             }
@@ -253,6 +263,7 @@ export default function CreateVPC({ setWarning, setToken }) {
                                                         value={vPC.mask}
                                                         placeholder="16"
                                                         disabled={disabled.vPCInfo}
+                                                        required
                                                     />
                                                 </div>
                                             </div>
@@ -266,6 +277,7 @@ export default function CreateVPC({ setWarning, setToken }) {
                                             className="form-select w-100 bg-light border-0"
                                             onChange={handleInputChange}
                                             disabled={disabled.vPCInfo}
+                                            required
                                         >
                                             <option value="" defaultValue disabled>choose a tenancy</option>
                                             <option value="default" >Default</option>
@@ -273,10 +285,9 @@ export default function CreateVPC({ setWarning, setToken }) {
                                         </select>
                                         <div className="d-flex justify-content-center mx-4 mt-5 mb-lg-4">
                                             <button
-                                                type="button"
+                                                type="submit"
                                                 className="btn btn-dark btn-lg"
-                                                onClick={handleCreateVPC}
-                                                disabled={!vPCConfigIsComplete()}
+                                                disabled={!(createButtonContent.type === 'span' && createButtonContent.props.children === 'Create')}
                                             >
                                                 {createButtonContent}
                                             </button>
@@ -284,6 +295,14 @@ export default function CreateVPC({ setWarning, setToken }) {
                                         <input type="checkbox" style={{ accentColor: "black" }} />&nbsp;&nbsp;&nbsp;keep tracking
                                         <br />
                                     </form>
+                                    {terminalOutput && (
+                                        <>
+                                            <h4 className="mt-3"> output : </h4>
+                                            <div className="bg-black text-terminal h6 rounded my-1 p-4"
+                                                style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+                                                {terminalOutput}
+                                            </div>
+                                        </>)}
                                 </div>
                             </div>
                         </div>

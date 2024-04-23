@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
+import { FullContext } from '../_app';
 import { validateEmail, separation } from "../../utils/functions";
 
 export default function Signup({setWarning}) {
@@ -17,6 +18,7 @@ export default function Signup({setWarning}) {
         const { name, value } = e.target;
         setPersonnalInfo(prevInfos => ({ ...prevInfos, [name]: value }));
     };
+
 
 
     const handleCreateAccount = async (e) => {
@@ -58,6 +60,15 @@ export default function Signup({setWarning}) {
             console.error("Error during registration:", error.message);
         }
     };
+
+    //redirect if user logged in
+    const { isLoggedIn } = useContext(FullContext);
+
+    useEffect(()=>{
+        if(isLoggedIn){
+            router.push("/home");
+        }
+    },[isLoggedIn])
 
     return (
         <div className="h-100 vh d-flex align-items-center justify-content-center p-5">

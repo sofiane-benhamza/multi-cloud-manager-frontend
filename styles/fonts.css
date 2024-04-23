@@ -1,5 +1,5 @@
 /*   GOOGLE   */
-@import url('https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@400..800&family=Comfortaa&family=Tilt+Warp&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@400..800&family=Comfortaa&family=Tilt+Warp&family=Mulish:ital,wght@0,200..1000;1,200..1000&display=swap');
 
 .tilt-warp-title {
   font-family: "Tilt Warp", sans-serif;
@@ -17,4 +17,12 @@
   font-weight: 400;
   font-style: normal;
   font-size: 21px;
+}
+
+.text-terminal {
+  color: #1AFF1A;
+  font-family: "Mulish", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 1000;
+  font-style: normal;
 }

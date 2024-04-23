@@ -1,34 +1,40 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
 import { FullContext } from "../../../_app";
-import { getCredentials, getS3s, regions, wait } from "../../../../utils/functions";
+import { getCredentials, getSecurityGroups, regions, wait } from "../../../../utils/functions";
 
-export default function S3({ setWarning }) {
+export default function SecurityGroup({ setWarning, setToken }) {
     const { token } = useContext(FullContext);
     const router = useRouter();
 
+
+    const [terminalOutput, setTerminalOutput] = useState("");
+
     // State for filter and vpcs
-    const [filter, setFilter] = useState({ account: "", region: "", accounts: [], s3s: [] });
+    const [filter, setFilter] = useState({ account: "", region: "", accounts: [], securityGroups: [] });
 
     // Effect to fetch account names when component mounts
     useEffect(() => {
         getCredentials(token, setFilter).then((isOk) => {
-            if (!isOk) setToken("expired")
+            if (!isOk) {
+                setToken("expired")
+            }
         });;
     }, [token]);
 
     // Effect to fetch vpcs when filter changes
     useEffect(() => {
+        setFilter((prevFilter) => ({ ...prevFilter, securityGroups: [] }))
         if (filter.account && filter.region) {
-            setFilter((prevFilter) => ({ ...prevFilter, s3s: [{ name: wait, storedObjects: wait }] }))
-            getS3s(token, filter.region, filter.account, setFilter).then((isOk) => {
+            setFilter(prev => ({ ...prev, securityGroups: [{ groupId: wait, groupName: wait, vpcId: wait }] }))
+            getSecurityGroups(token, filter.region, filter.account, setFilter).then((isOk) => {
                 if (!isOk) {
                     setWarning({
                         message: "there is a problem with the credentials provided !",
                         type: "danger",
                         isShown: true
                     })
-                    setFilter((prevFilter) => ({ ...prevFilter, s3s: [{ name: "-", storedObjects: "-" }] }))
+                    setFilter(prev => ({ ...prev, securityGroups: [{ groupId: "-", groupName: "-", vpcId: "-" }] }))
                 }
             });
         }
@@ -40,33 +46,43 @@ export default function S3({ setWarning }) {
         setFilter(prevFilter => ({ ...prevFilter, [name]: value }));
     };
 
-    // Handle S3 action <------
-    const handleDeleteS3 = async (bucket) => {
+    // Handle SG action <------
+    const handleDeleteSecurityGroup = async (sGId) => {
+        const actionConfig = new FormData();
+
+        actionConfig.append("token", token);
+        actionConfig.append("region", filter.region);
+        actionConfig.append("uniqueName", filter.account);
+
+
         try {
             const response = await fetch(
-                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/s3/?` +
+                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/security_group/?` +
                 new URLSearchParams({
                     token: token,
                     region: filter.region,
                     uniqueName: filter.account,
-                    bucketName: bucket
+                    securityGroupId: sGId
+
                 }), {
                 method: "DELETE",
             });
-
+            const data = await response.json();
             if (response.ok) {
                 setWarning({
-                    message: "bucket deleted successfully",
+                    message: "Security group deleted succesfully",
                     type: "success",
                     isShown: true
                 })
-                setFilter(prevConfig => ({ ...prevConfig, s3s: filter.s3s.filter(s3 => s3['name'] !== bucket) }))
+                setTerminalOutput(data.stdOut);
             } else {
                 setWarning({
-                    message: "something went wrong, please try again later or contact support, [error : 941] ",
-                    type: "danger",
+                    message: "Something went wrong, please try again later or contact support [error : 929]",
+                    type: "warning",
                     isShown: true
                 })
+                setTerminalOutput(data.stdErr);
+
             }
         } catch (error) {
             console.error("something went wrong");
@@ -110,7 +126,7 @@ export default function S3({ setWarning }) {
                                         ))}
                                     </select>
                                 </div>
-                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getS3s(token, filter.region, filter.account, setFilter) }} disabled={!(filter.account && filter.region)}>
+                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getSecurityGroups(token, filter.region, filter.account, setFilter) }} disabled={!(filter.account && filter.region)}>
                                     <i className="bi bi-arrow-clockwise"></i>
                                 </button>
                             </div>
@@ -118,29 +134,35 @@ export default function S3({ setWarning }) {
                                 <table className="table table-bordered table-striped">
                                     <thead className="thead-dark">
                                         <tr>
+                                            <th className="text-center">ID</th>
                                             <th className="text-center">Name</th>
-                                            <th className="text-center">Number of objects</th>
+                                            <th className="text-center">VPC</th>
                                             <th className="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filter.s3s.length > 0 ? (filter.s3s.map((bucket, index) => (
+                                        {filter.securityGroups.length > 0 ? (filter.securityGroups.map((sG, index) => (
                                             <tr key={index}>
-                                                <td className="text-center">{bucket['name']}</td>
-                                                <td className="text-center">{bucket['storedObjects']}</td>
+                                                <td className="text-center">{sG['groupId']}</td>
+                                                <td className="text-center">{sG['groupName']}</td>
+                                                <td className="text-center">{sG['vpcId']}</td>
                                                 <td className="text-center">
-                                                    <button className="btn mx-1 btn-danger" title="Delete" onClick={() => handleDeleteS3(bucket['name'])} disabled={bucket['storedObjects'] == '-'}>
+                                                    <button
+                                                        className="btn mx-1 btn-danger"
+                                                        title="Delete"
+                                                        onClick={() => handleDeleteSecurityGroup(sG['groupId'])}
+                                                        disabled={(sG['groupName'] == "default")}>
                                                         <i className="bi bi-trash"></i>
                                                     </button>
                                                 </td>
                                             </tr>
-                                        ))) : null
-                                        }
+                                        ))) : null}
                                         <tr className="bg-dark">
                                             <td></td>
                                             <td></td>
-                                            <td colSpan="4" className="px-2 w-100 btn btn-success" onClick={() => { router.push('./s3/create'); }}>
-                                                <i className="bi bi-cloud-plus p-2"></i>Create a Bucket
+                                            <td></td>
+                                            <td className="px-2 w-100 btn btn-success" onClick={() => { router.push('./security_groups/create'); }}>
+                                                <i className="bi bi-cloud-plus p-2"></i>Create a Security group
                                             </td>
                                         </tr>
                                     </tbody>

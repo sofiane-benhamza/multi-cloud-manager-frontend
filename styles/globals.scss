@@ -2,12 +2,17 @@ html,
 body {
   padding: 0;
   margin: 0;
-  min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
   overflow-x: hidden;
 }
 
+:root {
+  --blue-ocean: #1B205B;
+  --blue-beach: #2036A1;
+}
+
+@import "loader.css";
 @import "fonts.css";
 @import "slider.css";
 @import "scrollbar.css";
@@ -24,28 +29,130 @@ a {
 
 .down-to-up {
   transition: all .3s ease;
+&:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 0 8px var(--blue-beach);
 }
-
-.down-to-up:hover {
-  transform: translateY(-10px); /* Move the element 10 pixels up */
 }
 
 .custom-dark-button {
   color: white !important;
   border-radius: 10px;
   transition: all .3s;
-  &:hover{
+
+  &:hover {
     color: black !important;
     background-color: white;
   }
 }
 
-.custom-light-button{
+.custom-light-button {
   border-radius: 10px;
   color: black !important;
   transition: all .3s;
-  &:hover{
+
+  &:hover {
     color: white !important;
     background-color: black;
   }
+}
+
+.custom-ocean-gradiant {
+  background-image: linear-gradient(to top, #4facfe 0%, #00f2fe 100%);
+}
+
+.bg-beach {
+  background-color: var(--blue-beach);
+  color: white;
+  border: 1px 0px 1px 1px solid white;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.bg-ocean {
+  background-color: var(--blue-ocean);
+  color: white;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.bg-black {
+  background-color: black;
+}
+
+.btn-beach {
+  color: white;
+  background-color: transparent;
+  border: 2px solid white;
+  padding: 10px;
+  margin: 0 20px;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--blue-beach);
+    background-color: white;
+  }
+}
+
+.beautiful-number {
+  cursor: pointer;
+
+  &:hover {
+    color: aqua;
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.hover-underline-black,
+.hover-underline-light {
+  position: relative;
+  text-decoration: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    transition: width 0.3s ease, left 0.3s ease;
+    transform: translateX(-50%);
+  }
+
+  &:hover::after {
+    width: 100%;
+    left: 50%;
+  }
+}
+
+.hover-underline-black::after {
+  background-color: black;
+}
+
+.hover-underline-light::after {
+  background-color: #FFF;
+}
+
+
+button[disabled]{
+    cursor: not-allowed;
+}
+input[type="checkbox"]{
+  cursor:pointer;
+}
+
+.text-underline{
+  text-decoration: underline;
+}
+
+.rounded-10 {
+  border-radius: 10px;
+}
+
+.background {
+  background-image: repeating-linear-gradient(135deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(45deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(67.5deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(135deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(45deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(112.5deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(112.5deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(45deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(22.5deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(45deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(22.5deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(135deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(157.5deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(67.5deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),repeating-linear-gradient(67.5deg, hsla(264,0%,88%,0.03) 0px, hsla(264,0%,88%,0.03) 1px,transparent 1px, transparent 12px),linear-gradient(90deg, rgb(151, 26, 210),rgb(57, 199, 205));
 }

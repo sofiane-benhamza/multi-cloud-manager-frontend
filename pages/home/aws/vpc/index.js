@@ -1,9 +1,9 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
 import { FullContext } from "../../../_app";
-import { getCredentials, getVPCs, regions } from "../../../../utils/functions";
+import { getCredentials, getVPCs, regions, wait } from "../../../../utils/functions";
 
-export default function VPC({ setWarning }) {
+export default function VPC({ setWarning, setToken }) {
     const { isConnected, token } = useContext(FullContext);
     const router = useRouter();
 
@@ -12,13 +12,26 @@ export default function VPC({ setWarning }) {
 
     // Effect to fetch account names when component mounts
     useEffect(() => {
-        getCredentials(token, setFilter);
+        getCredentials(token, setFilter).then((isOk) => {
+            if (!isOk) setToken("expired")
+        });;
     }, []);
 
     // Effect to fetch vpcs when filter changes
     useEffect(() => {
-        if (filter.account && filter.region)
-            getVPCs(token, filter.region, filter.account, setFilter)
+        if (filter.account && filter.region) {
+            setFilter((prev) => ({ ...prev, vPCs: [{ "VPC ID": wait, "Name": wait, "CIDR Block": wait }] }))
+            getVPCs(token, filter.region, filter.account, setFilter).then((isOk) => {
+                if (!isOk) {
+                    setWarning({
+                        message: "there is a problem with the credentials provided !",
+                        type: "danger",
+                        isShown: true
+                    })
+                    setFilter((prev) => ({ ...prev, vPCs: [{ "VPC ID": "-", "Name": "-", "CIDR Block": "-" }] }))
+                }
+            });
+        }
     }, [filter.account, filter.region]);
 
     // Handle input change for filter
@@ -38,15 +51,20 @@ export default function VPC({ setWarning }) {
 
         try {
             const response = await fetch(
-                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/vpc/`, {
+                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/vpc/?` +
+                new URLSearchParams({
+                    token: token,
+                    region: filter.region,
+                    uniqueName: filter.account,
+                    vPCId: vPCId
+                }), {
                 method: "DELETE",
-                body: actionConfig,
             });
             if (response.ok) {
                 const data = await response.json();
                 setWarning({
                     message: "VPC deleted successfully ",
-                    type:"success",
+                    type: "success",
                     isShown: true
                 })
                 setFilter(prevConfig => ({ ...prevConfig, vPCs: filter.vPCs.filter(vPC => vPC['VPC ID'] !== vPCId) }))
@@ -119,23 +137,15 @@ export default function VPC({ setWarning }) {
                                             <tr key={vPC['VPC ID']}>
                                                 <td className="text-center">{vPC['VPC ID']}</td>
                                                 <td className="text-center">{vPC['Name']}</td>
-                                                <td className="text-center">{vPC['CIDR Block'].split('/')[0]}</td>
-                                                <td className="text-center">{vPC['CIDR Block'].split('/')[1]}</td>
+                                                <td className="text-center">{typeof vPC['CIDR Block'] === "string" ? vPC['CIDR Block'].split('/')[0] : vPC['CIDR Block']}</td>
+                                                <td className="text-center">{typeof vPC['CIDR Block'] === "string" ? vPC['CIDR Block'].split('/')[1] : vPC['CIDR Block']}</td>
                                                 <td className="text-center">
                                                     <button className="btn mx-1 btn-danger" title="Delete" onClick={() => handleDeleteVPC(vPC['VPC ID'])} disabled={vPC['Name'] === "default"}>
                                                         <i className="bi bi-trash"></i>
                                                     </button>
                                                 </td>
                                             </tr>
-                                        ))) : (
-                                            <tr>
-                                                <td>There is no VPCs</td>
-                                                <td className="text-center">-</td>
-                                                <td className="text-center">-</td>
-                                                <td className="text-center">-</td>
-                                                <td className="text-center">-</td>
-                                            </tr>
-                                        )}
+                                        ))) : null}
                                         <tr className="bg-dark">
                                             <td></td>
                                             <td></td>

@@ -1,36 +1,34 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
 import { FullContext } from "../../../_app";
-import { getCredentials, getEC2s, regions, wait } from "../../../../utils/functions";
+import { getCredentials, getRDSs, regions, wait } from "../../../../utils/functions";
 
-export default function EC2({ setWarning, setToken}) {
+export default function RDS({ setWarning, setToken }) {
     const { token } = useContext(FullContext);
     const router = useRouter();
 
     // State for filter and instances
-    const [filter, setFilter] = useState({ account: "", region: "", accounts: [], instances: [] });
+    const [filter, setFilter] = useState({ account: "", region: "", accounts: [], databases: [] });
 
     // Effect to fetch account names when component mounts
     useEffect(() => {
-        getCredentials(token, setFilter).then((ok) => {
-            if(!ok){
-                setToken("expired")
-            }
+        getCredentials(token, setFilter).then((isOk) => {
+            if (!isOk) setToken("expired")
         });
     }, []);
 
     // Effect to fetch EC2 instances when filter changes
     useEffect(() => {
         if (filter.account && filter.region) {
-            setFilter((prev) => ({ ...prev, instances: [{ name: wait, id: wait, state:wait, size: wait, privateIp: wait, publicIp: wait }] }))
-            getEC2s(token, filter.account, filter.region, setFilter).then((isOk) => {
+            setFilter((prev) => ({ ...prev, databases: [{ databaseName: wait, engine: wait, state: wait, totalSize: wait, address: wait, port: wait, takenSize: wait, publicIp: wait }] }))
+            getRDSs(token, filter.account, filter.region, setFilter).then((isOk) => {
                 if (!isOk) {
                     setWarning({
                         message: "there is a problem with the credentials provided !",
                         type: "danger",
                         isShown: true
                     })
-                    setFilter((prev) => ({ ...prev, instances: [{ name: "-", id: "-", state:"-", size: "-", privateIp: "-", publicIp: "-" }] }))
+                    setFilter((prev) => ({ ...prev, databases: [{ databaseName: "-", engine: "-", state: "-", totalSize: "-", address: "-", port: "-", takenSize: "-", publicIp: "-" }] }))
                 }
             });
 
@@ -44,47 +42,49 @@ export default function EC2({ setWarning, setToken}) {
     };
 
     //handle actions
-    const handleEC2Action = async (action, eC2Id) => {
+    const handleRDSAction = async (action, dbId) => {
         const actionConfig = new FormData();
 
         actionConfig.append("token", token);
         actionConfig.append("uniqueName", filter.account);
         actionConfig.append("region", filter.region);
-        actionConfig.append("eC2Id", eC2Id);
-        actionConfig.append("action", action)
+        actionConfig.append("name", dbId);
+        actionConfig.append("action", action);
 
 
         try {
             const response = await fetch(
-                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/ec2/`, {
-                method: "PUT",   //update
+                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/rds/`, {
+                method: "PUT",   // UPdate the stete of RDS
                 body: actionConfig,
             });
             if (response.ok) {
                 setWarning({
-                    message: `instance ${filter.instances.find(instance => instance.id === eC2Id)?.name || null} has been ${action.charAt(1) !== 'h' ? `${action}ed` : action} successfully`,
+                    message: `instance ${dbId} has been ${action}ed  successfully`,
                     type: "success",
                     isShown: true
                 })
+
                 setFilter(prev => ({
                     ...prev,
-                    instances: prev.instances.map(instance => {
-                        if (instance.id === eC2Id) {
-                            return { ...instance, state: "pending", publicIp: "N/A" };
+                    databases: prev.databases.map(database => {
+                        if (database.databaseName === dbId) {
+                            return { ...database, state: "pending" };
                         }
-                        return instance;
+                        return database
                     })
                 }));
+                
 
             } else {
                 setWarning({
-                    message: "something went wrong, please try again later or contact support, [error : 721] ",
+                    message: "something went wrong, please try again later or contact support, [error : 921] ",
                     type: "danger",
                     isShown: true
                 })
             }
         } catch (error) {
-            console.error("something went wrong");
+            console.error("something went wrong", error);
         }
     }
 
@@ -126,7 +126,7 @@ export default function EC2({ setWarning, setToken}) {
 
                                     </select>
                                 </div>
-                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getEC2s(token, filter.account, filter.region, setFilter) }} disabled={!(filter.account && filter.region)}>
+                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getRDSs(token, filter.account, filter.region, setFilter) }} disabled={!(filter.account && filter.region)}>
                                     <i className="bi bi-arrow-clockwise"></i>
                                 </button>
                             </div>
@@ -134,43 +134,39 @@ export default function EC2({ setWarning, setToken}) {
                                 <table className="table table-bordered table-striped">
                                     <thead className="thead-dark">
                                         <tr>
-                                            <th className="text-center">ID</th>
                                             <th className="text-center">Name</th>
-                                            <th className="text-center">Size</th>
-                                            <th className="text-center">State</th>
-                                            <th className="text-center">Private&nbsp;IP</th>
-                                            <th className="text-center">Public&nbsp;IP</th>
+                                            <th className="text-center">Engine</th>
+                                            <th className="text-center">Status</th>
+                                            <th className="text-center">Address</th>
+                                            <th className="text-center">Port</th>
+                                            <th className="text-center">Total size (GBs)</th>
                                             <th className="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filter.instances.length > 0 ? (filter.instances.map((instance, index) => (
+                                        {filter.databases.length > 0 ? (filter.databases.map((database, index) => (
                                             <tr key={index}>
-                                                <td className="text-center">{instance.id}</td>
-                                                <td className="text-center">{instance.name}</td>
-                                                <td className="text-center">{instance.size}</td>
+                                                <td className="text-center">{database.databaseName}</td>
+                                                <td className="text-center">{database.engine}</td>
                                                 <td className="text-center">
-                                                    {instance.state === "running" ? (
-                                                        <span className="text-success">running</span>
-                                                    ) : instance.state === "stopped" ? (
+                                                    {database.state === "available" ? (
+                                                        <span className="text-success">available</span>
+                                                    ) : database.state === "stopped" ? (
                                                         <span className="text-dark">stopped</span>
-                                                    ) : instance.state === "terminated" ? (
+                                                    ) : database.state === "terminated" ? (
                                                         <span className="text-danger">terminated</span>
                                                     ) : (
-                                                        <span>{instance.state}</span>
+                                                        <span>{database.state}</span>
                                                     )}
                                                 </td>
+                                                <td className="text-center">{database.address}</td>
+                                                <td className="text-center">{database.port}</td>
+                                                <td className="text-center">{database.totalSize}</td>
 
-                                                <td className="text-center">{instance.privateIp}</td>
-                                                <td className="text-center">{instance.publicIp}</td>
                                                 <td className="text-center">
-                                                    <button className="btn mx-1 btn-success" title="Start" disabled={instance.state !== "stopped"} onClick={() => { handleEC2Action("start", instance.id) }}>
-                                                        <i className="bi bi-play-fill"></i>
-                                                    </button>
-                                                    <button className="btn mx-1 btn-dark" title="Shutdown" disabled={instance.state !== "running"} onClick={() => { handleEC2Action("shutdown", instance.id) }}>
-                                                        <i className="bi bi-sign-stop"></i>
-                                                    </button>
-                                                    <button className="btn mx-1 btn-danger" title="Terminate" disabled={instance.state !== "running" && instance.state !== "stopped"} onClick={() => { handleEC2Action("terminate", instance.id) }}>
+                                                    <button className="btn mx-1 btn-warning" title="Reboot" disabled={database.state !== "available"} onClick={() => { handleRDSAction("reboot", database.databaseName) }}>
+                                                        <i class="bi bi-bootstrap-reboot"></i>                                                    </button>
+                                                    <button className="btn mx-1 btn-danger" title="Terminate" disabled={database.state !== "available"} onClick={() => { handleRDSAction("terminate", database.databaseName) }}>
                                                         <i className="bi bi-x-circle"></i>
                                                     </button>
                                                 </td>
@@ -184,7 +180,7 @@ export default function EC2({ setWarning, setToken}) {
                                             <td className="px-2">{ }</td>
                                             <td className="px-2">{ }</td>
                                             <td className="px-2">{ }</td>
-                                            <td className="px-2 w-100 btn btn-success" onClick={() => { router.push('./ec2/create'); }}><i className="bi bi-cloud-plus p-2"></i>Create an EC2</td>
+                                            <td className="px-2 w-100 btn btn-success" onClick={() => { router.push('./rds/create'); }}><i className="bi bi-cloud-plus p-2"></i>Create an RDS</td>
                                         </tr>
                                     </tbody>
                                 </table>

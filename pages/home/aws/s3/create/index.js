@@ -7,19 +7,24 @@ export default function CreateS3({ setWarning, setToken }) {
     const { token } = useContext(FullContext);
     const router = useRouter();
 
+    const [terminalOutput, setTerminalOutput] = useState("");
+
+    const INIT = {
+        bucket: {
+            account: "",
+            region: "",
+            bucketName: "",
+            publicAccess: "0000"
+        }, disabled: {
+            region: true,
+            bucketName: true,
+        }
+    }
     // VPC configuration
-    const [bucket, setBucket] = useState({
-        account: "",
-        region: "",
-        bucketName: "",
-        publicAccess: "0000"
-    })
+    const [bucket, setBucket] = useState(INIT.bucket)
 
     // Disable select buttons, allow when needed
-    const [disabled, setDisabled] = useState({
-        region: true,
-        bucketName: true,
-    })
+    const [disabled, setDisabled] = useState(INIT.disabled)
     // Disable Create button 
     const bucketConfigIsComplete = () => {
         return Object.values(bucket).every(val => val !== null && val !== '');
@@ -36,10 +41,9 @@ export default function CreateS3({ setWarning, setToken }) {
 
     //reference of input of keyname
     useEffect(() => { // Call get credentials
-        const getAccounts = async () => {
-            await getCredentials(token, setChooseFrom);
-        };
-        getAccounts();
+        getCredentials(token, setChooseFrom).then((isOk) => {
+            if (!isOk) setToken("expired")
+        });;
     }, []);
 
     // Can not be optimized cause, calling functions time to time
@@ -47,6 +51,8 @@ export default function CreateS3({ setWarning, setToken }) {
         const { name, value } = e.target;
         switch (name) {
             case "account":
+                setBucket(INIT.bucket)
+                setDisabled(INIT.disabled)
                 setBucket(prevConfig => ({
                     ...prevConfig,
                     account: value
@@ -79,22 +85,27 @@ export default function CreateS3({ setWarning, setToken }) {
 
     const handleCreateS3 = async (e) => {
         e.preventDefault();
-        setCreateButtonContent(<span><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> please wait</span>);
+        setCreateButtonContent(
+            <span>
+                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> please wait
+            </span>
+        );
         try {
             const bucketConfig = new FormData();
             bucketConfig.append("token", token); //token authentication
 
             for (const [key, value] of Object.entries(bucket)) {
-                if(value.indexOf(' ') !== -1){
+                if (value.includes(' ')) {
                     setWarning({
                         message: "Bucket name must not contain whitespaces !",
                         type: "warning",
                         isShown: true
-                    })
-                    return false;
+                    });
+                    return;
                 }
                 bucketConfig.append(key, value);
             }
+
             const response = await fetch(
                 "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/terraform/aws/s3/",
                 {
@@ -102,26 +113,35 @@ export default function CreateS3({ setWarning, setToken }) {
                     body: bucketConfig,
                 }
             );
-            if (response.ok) {
-                setWarning({
-                    message: "Your bucket has been created successfully",
-                    type: "success",
-                    isShown: true
-                })
-                router.push("./")
-            } else {
+
+            if (!response.ok) {
                 setWarning({
                     message: "Something went wrong, please check bucket name, try again or contact support [error : 736]",
                     type: "success",
                     isShown: true
-                })
+                });
+                const data = await response.json();
+                setTerminalOutput(data.stdErr);
+                return;
             }
-        } catch (error) {
-            console.error("something went wrong")
-        } finally {
-            setCreateButtonContent(<span>Create</span>)
-        }
 
+            const data = await response.json();
+            setWarning({
+                message: "Your bucket has been created successfully",
+                type: "success",
+                isShown: true
+            });
+            setTerminalOutput(data.stdOut);
+        } catch (error) {
+            console.error("Something went wrong:", error);
+            setWarning({
+                message: "Something went wrong. Please try again later.",
+                type: "error",
+                isShown: true
+            });
+        } finally {
+            setCreateButtonContent(<span>Create</span>);
+        }
     };
 
     return (
@@ -135,9 +155,9 @@ export default function CreateS3({ setWarning, setToken }) {
                             <div className="row justify-content-center d-flex justify-content-center align-items-center">
                                 <div className="col-12">
                                     <form onSubmit={handleCreateS3}>
-                                    <h3 className="text-center h3 mb-3 mx-1 mx-md-4">
-                                        create an S3 bucket
-                                    </h3>
+                                        <h3 className="text-center h3 mb-3 mx-1 mx-md-4">
+                                            create an S3 bucket
+                                        </h3>
 
                                         <label className="form-label">
                                             Account
@@ -268,6 +288,7 @@ export default function CreateS3({ setWarning, setToken }) {
                                             <button
                                                 type="submit"
                                                 className="btn btn-dark btn-lg"
+                                                disabled={!(createButtonContent.type === 'span' && createButtonContent.props.children === 'Create')}
                                             >
                                                 {createButtonContent}
                                             </button>
@@ -275,6 +296,14 @@ export default function CreateS3({ setWarning, setToken }) {
                                         <input type="checkbox" style={{ accentColor: "black" }} />&nbsp;&nbsp;&nbsp;keep tracking
                                         <br />
                                     </form>
+                                    {terminalOutput && (
+                                        <>
+                                            <h4 className="mt-3"> output : </h4>
+                                            <div className="bg-black text-terminal h6 rounded my-1 p-4"
+                                                style={{ fontFamily: "Arial, Helvetica, sans-serif" }}>
+                                                {terminalOutput}
+                                            </div>
+                                        </>)}
                                 </div>
                             </div>
                         </div>

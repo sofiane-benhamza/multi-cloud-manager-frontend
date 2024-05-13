@@ -1,49 +1,10 @@
-async function getCredentials(token, setChooseFrom, getFullCredentials) {
-    if (!token)
-        return false
-    try {
-        const response = await fetch(
-            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/cloud/?token=" + token,
-            {
-                method: "GET",
-            }
-        );
-
-        if (response.ok) {
-            const data = await response.json();
-
-            if (data.message) return true ///the case where there is credentials yet
-
-            if (getFullCredentials) {
-                const accounts = data.map(item => ({
-                    id: item.uniqueName,
-                    accessKeyId: item.accessKeyId,
-                    secretAccessKey: item.secretAccessKey,
-                    cloud: item.cloud
-                }));
-                setChooseFrom(accounts);
-            } else { // Only IDs
-                const names = data.map(item => item.uniqueName);
-                setChooseFrom((prevState) => ({
-                    ...prevState,
-                    accounts: names,
-                }))
-            }
-            return true;
-        }
-        return false;
-    } catch (error) {
-        console.error("something went wrong ", error);
-        return true
-    }
-}   // would you like to set up an account
 
 async function getVPCs(token, region, account, setChooseFrom) {
     if (!token)
         return false
     try {
         const response = await fetch(
-            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/vpc/?" +
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/vpc/?` +
             new URLSearchParams({
                 token: token,
                 region: region,
@@ -81,7 +42,7 @@ async function getSubnets(token, region, account, setChooseFrom) {
         return false
     try {
         const response = await fetch(
-            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/subnet/?" +
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/subnet/?` +
             new URLSearchParams({
                 token: token,
                 region: region,
@@ -118,7 +79,12 @@ async function getSecurityGroups(token, region, account, setChooseFrom) {
         return false
     try {
         const response = await fetch(
-            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/security_group/?token=" + token + "&region=" + region + "&uniqueName=" + account,
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/security_group/?` +
+            new URLSearchParams({
+                token: token,
+                region: region,
+                account: account
+            }),
             {
                 method: "GET",
             }
@@ -150,7 +116,7 @@ async function getSSHKeys(token, account, setChooseFrom) {
         return false
     try {
         const response = await fetch(
-            "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/aws/ssh_keys/?" +
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/ssh_keys/?` +
             new URLSearchParams({
                 token: token,
                 uniqueName: account
@@ -166,7 +132,7 @@ async function getSSHKeys(token, account, setChooseFrom) {
             }
             setChooseFrom((prevState) => ({
                 ...prevState,
-                subnets: data
+                sSHKeys: data
             }))
             return true;
         }
@@ -177,51 +143,16 @@ async function getSSHKeys(token, account, setChooseFrom) {
     }
 }
 
-// Returns True if token are good, False otherwise
-async function getPersonnalInfo(token, setPersonnalInfo, getNameOnly) {
-    if (!token)
-        return false
-
-    try {
-        const response = await fetch(
-            `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/users/?token=${token}`,
-            {
-                method: "GET",
-            }
-        );
-
-        if (response.ok) {
-            const data = await response.json();
-            if (getNameOnly) {
-                data && setPersonnalInfo(data.fname);
-            } else {
-                data && setPersonnalInfo({
-                    fname: data.fname,
-                    lname: data.lname,
-                    email: data.email,
-                    role: data.role
-                });
-            }
-            return true;
-        }
-
-        return false
-
-    } catch (error) {
-        console.error("something went wrong")
-        return false
-    }
-};
-
 async function getEC2s(token, account, region, setResult) {
     if (!token)
         return false
     try {
-        const response = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/ec2/?` + new URLSearchParams({
-            token: token,
-            uniqueName: account,
-            region: region
-        }), {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/ec2/?` + new URLSearchParams({
+                token: token,
+                uniqueName: account,
+                region: region
+            }), {
             method: 'GET'
         });
         if (response.ok) {
@@ -247,17 +178,19 @@ async function getECSs(token, account, region, setResult) {
     if (!token)
         return false
     try {
-        const response = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/ecs/?` + new URLSearchParams({
-            token: token,
-            uniqueName: account,
-            region: region
-        }), {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/ecs/?` +
+            new URLSearchParams({
+                token: token,
+                uniqueName: account,
+                region: region
+            }), {
             method: 'GET'
         });
         if (response.ok) {
             let data = await response.json();
             if (data.length == 0)
-                data = [{ name: "there is no clusters", tasks:[],  services: [], containerInstances: [] }]
+                data = [{ clusterName: "there is no clusters", tasks: [], services: [], containerInstances: [] }]
             setResult((prevState) => ({
                 ...prevState,
                 clusters: data,
@@ -275,11 +208,13 @@ async function getS3s(token, region, account, setChooseFrom) {
     if (!token)
         return false
     try {
-        const response = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/s3/?` + new URLSearchParams({
-            token: token,
-            uniqueName: account,
-            region: region
-        }), {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/s3/?` +
+            new URLSearchParams({
+                token: token,
+                uniqueName: account,
+                region: region
+            }), {
             method: 'GET'
         });
 
@@ -309,13 +244,14 @@ async function getRDSs(token, account, region, setResult) {
     if (!token)
         return false
     try {
-        const response = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/rds/?` + new URLSearchParams({
-            token: token,
-            uniqueName: account,
-            region: region,
-            service: "databases"
+        const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_ADDR + "aws/rds/?" +
+            new URLSearchParams({
+                token: token,
+                uniqueName: account,
+                region: region,
+                service: "databases"
 
-        }), {
+            }), {
             method: 'GET'
         });
 
@@ -337,32 +273,73 @@ async function getRDSs(token, account, region, setResult) {
     }
 };
 
-// Static functions
+async function getAmplifyApps(token, account, region, setResult) {
+    if (!token)
+        return false
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/amplify/?` +
+            new URLSearchParams({
+                token: token,
+                account: account,
+                region: region,
 
-function validateEmail(email) {
-    var re = /\S+@\S+\.\S+/;
-    return re.test(email);
-}
+            }), {
+            method: 'GET'
+        });
 
-function validateIPAddress(ipAddress) {
-    if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipAddress)) {
-        return (true)
+        if (response.ok) {
+            let data = await response.json();
+            if (data.length == 0) {
+                data = [{ name: "There is no applications", id: "-", repository: "-", technology: "-" }]
+            }
+            setResult((prevState) => ({
+                ...prevState,
+                applications: data,
+            }))
+            return true
+        }
+        return false;
+    } catch (error) {
+        console.error("something went wrong", error);
+        return false
     }
-    return (false)
-}
+};
 
-function separation(title) {
-    return (
-        <>
-            <div className="d-flex my-3 flex-row align-items-center">
-                <hr className="w-25 border border-dark" />
-                <p className="h6 flex-grow-1 text-center"> {title} </p>
-                <hr className="w-25 border border-dark" />
-            </div>
-        </>
+async function getRoute53Domains(token, account, setResult) {
+    if (!token)
+        return false
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/route53/?` +
+            new URLSearchParams({
+                token: token,
+                account: account,
+            }), {
+            method: 'GET'
+        });
 
-    )
-}
+        if (response.ok) {
+            let data = await response.json();
+            if (data.length == 0) {
+                console.log("hello")
+                data = [{ domain: "There is no registered domains", id: "-", privateZone: "-", recordCount: "-" }]
+            }
+            setResult((prevState) => ({
+                ...prevState,
+                domains: data,
+            }))
+            return true
+        }
+        return false;
+    } catch (error) {
+        console.error("something went wrong", error);
+        return false
+    }
+};
+
+
+
 
 const sizes = [
     "t1.micro", "t2.micro", "t2.small", "t2.medium", "t2.large",
@@ -381,7 +358,7 @@ const regions = [
     "sa-east-1"
 ];
 
-const wait = <div className="spinner-border text-primary" role="status">   <span className="sr-only"></span> </div>
 
-export { getEC2s, getECSs, getRDSs, getS3s, getCredentials, getVPCs, getSubnets, getSecurityGroups, getSSHKeys, getPersonnalInfo, validateIPAddress, validateEmail, separation, sizes, regions, wait };
+
+export { getEC2s, getECSs, getRDSs, getS3s, getVPCs, getSubnets, getSecurityGroups, getSSHKeys, getAmplifyApps, getRoute53Domains, sizes, regions };
 

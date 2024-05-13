@@ -1,10 +1,10 @@
-import { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "@/pages/_app";
-import {  getVPCs, getSubnets, getSecurityGroups, getSSHKeys, sizes, regions } from "@/utils/aws";
-import { getCredentials, Separation } from "@/utils/general";
+import { sizes, locations, getVNs, getSubnets, getSecurityGroups, getResourceGroups, getSSHKeys } from "@/utils/azure";
+import { getCredentials, Separation, validateMPassword } from "@/utils/general";
 import Downloader from "@/comps/Downloader";
 
-export default function CreateEC2({ setWarning, setToken }) {
+export default function CreateVM({ setWarning, setToken }) {
     const { token } = useContext(AuthContext);
 
     const [terminalOutput, setTerminalOutput] = useState({ terraform: false, ssh: "" });
@@ -12,33 +12,43 @@ export default function CreateEC2({ setWarning, setToken }) {
 
     const INIT = {
         softwares: ["apache2", "nginx", "java 17", "mongodb", "tomcat", "docker"],
-        ec2: {
+        VM: {
             account: "",
-            instanceSize: "",
-            serverName: "",
-            region: "",
-            vPC: "",
+            location: "",
+            resourceGroup: "",
+            vn: "",
             subnet: "",
-            securityGroupe: "",
-            autoPublicIp: true,
+            securityGroup: "",
+            vmSize: "",
+            serverName: "",
+            adminUsername: "",
+            adminPassword: "",
             toInstall: "",
+            autoPublicIp: true,
             githubLink: "",
             createNewSSHKey: false,
             existentSSHKeyName: "",
             newSSHKeyName: "",
+            disablePasswordAuthentication: false
         },
-        disabled: {
-            region: true,
-            vPC: true,
+        DISABLED: {
+            location: true,
+            resourceGroup: true,
+            vn: true,
             subnet: true,
-            securityGroupe: true,
+            securityGroup: true,
+            vmSize: true,
+            serverName: true,
+            toInstall: true,
+            adminUsername: true,
+            adminPassword: true
         }
     };
 
-    // EC2 configuration
-    const [eC2, setEC2] = useState(INIT.ec2)
+    // VM configuration
+    const [vm, setVM] = useState(INIT.VM)
     // Disable select buttons, allow when needed
-    const [disabled, setDisabled] = useState(INIT.disabled)
+    const [disabled, setDisabled] = useState(INIT.DISABLED)
     // Disable Create button 
 
     const [createButtonContent, setCreateButtonContent] = useState(
@@ -49,10 +59,11 @@ export default function CreateEC2({ setWarning, setToken }) {
     // Items to choose from
     const [chooseFrom, setChooseFrom] = useState({
         accounts: [],
-        vPCs: [],
+        resourceGroups: [],
+        vns: [],
         subnets: [],
         securityGroups: [],
-        sSHKeys: []
+        sshKeys: []
     })
 
 
@@ -63,66 +74,62 @@ export default function CreateEC2({ setWarning, setToken }) {
             }
         });
 
-    }, []); // token variation for re-execution
+    }, []); // Token variation for re-execution
 
 
-    // Can not be optimized cause, calling functions time to time
+    //  Can not be optimized cause, calling functions time to time
+    const vmArray = Object.keys(vm);
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setDisabled(prevConfig => ({
-            ...prevConfig,
-            name: true
-        }));
+
+        name == "account" && setVM(INIT.VM)
+
+        const index = vmArray.indexOf(name);
+
+        // Update the value
+        setVM((prev) => ({ ...prev, [name]: value }));
+
+        //  Activate next field
+        (index !== -1) && setDisabled((prev) => ({ ...prev, [vmArray[index + 1]]: false }))
 
         switch (name) {
             case "account":
-                setEC2(INIT.ec2)
+                // If account is changed,  erase all previous config
                 setChooseFrom(prev => ({
                     accounts: prev.accounts,
                     ...Object.keys(prev).reduce((acc, key) => key === "accounts" ? acc : { ...acc, [key]: [] }, {})
-                }));           // If account is changed,  erase all previous config
-                setDisabled(prevConfig => ({
-                    ...prevConfig,
-                    region: false
                 }));
-                getSSHKeys(token, value, setChooseFrom);
                 break;
-            case "region":
-                setDisabled(prevConfig => ({
-                    ...prevConfig,
-                    vPC: false,
-                }));
-                getVPCs(token, value, eC2.account, setChooseFrom); //fetch all vPCs inside region from backend
-                getSecurityGroups(token, value, eC2.account, setChooseFrom); //fetch all sgs inside region from backend
+            case "location":
+                getResourceGroups(token, vm.account, value, setChooseFrom) // Value = vm.location
                 break;
-            case "vPC":
-                setDisabled(prevConfig => ({
-                    ...prevConfig,
-                    subnet: false,
-                    securityGroupe: false
-                }));
-                getSubnets(token, eC2.region, eC2.account, setChooseFrom);
+            case "resourceGroup":
+                getVNs(token, vm.account, vm.region, value, setChooseFrom)  // Value = vm.resourceGroup
                 break;
-            case "subnet":
-                setDisabled(prevConfig => ({
-                    ...prevConfig,
-                    region: false
-                }));
+            case "vn":
+                getSubnets(token, vm.account, value, vm.resourceGroup, setChooseFrom);  // Value == vm.virtualNetwork == vn
+                getSecurityGroups(token, vm.account, vm.resourceGroup, setChooseFrom);
+                break;
+            case "securityGroup":
+                getSSHKeys(token, vm.account, vm.resourceGroup, setChooseFrom)
                 break;
             default:
                 break;
 
         }
-        setEC2((prevConfig) => ({ ...prevConfig, [name]: value }));
+
+
 
     };
 
-    const handleCreateEC2 = async (e) => {
+    const handleCreateVM = async (e) => {
         e.preventDefault();
         setTerminalOutput({ terraform: false, ssh: "" });
+        console.log(vm)
+        return
         setCreateButtonContent(<span><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> please wait</span>);
 
-        let SSHKeyIsUnique = !chooseFrom.sSHKeys.includes(newSSHKeyName);  // Same key name at aws will failed, checked here
+        let SSHKeyIsUnique = !chooseFrom.sshKeys.includes(newSSHKeyName);  // Same key name at aws will failed, checked here
         if (!SSHKeyIsUnique) {
             setWarning({
                 message: "SSH key name already exists, please choose another key name",
@@ -133,24 +140,24 @@ export default function CreateEC2({ setWarning, setToken }) {
         }
 
         try {
-            const eC2Configuration = new FormData();
-            eC2Configuration.append("token", token); // Token authentication
+            const VMConfiguration = new FormData();
+            VMConfiguration.append("token", token); // Token authentication
 
             const notToBeSent = ["existentSSHKeyName", "newSSHKeyName", "createNewSSHKey"];
 
-            for (const key in eC2) {
-                if (eC2.hasOwnProperty(key) && !notToBeSent.includes(key)) {
-                    eC2Configuration.append(key, eC2[key]);
+            for (const key in VM) {
+                if (vm.hasOwnProperty(key) && !notToBeSent.includes(key)) {
+                    VMConfiguration.append(key, VM[key]);
                 }
             }
 
-            eC2.createNewSSHKey ? eC2Configuration.append("newSSHKeyName", eC2.newSSHKeyName) : eC2Configuration.append("existentSSHKeyName", eC2.existentSSHKeyName);//append here if create or choose
+            vm.createNewSSHKey ? VMConfiguration.append("newSSHKeyName", vm.newSSHKeyName) : VMConfiguration.append("existentSSHKeyName", vm.existentSSHKeyName);//append here if create or choose
 
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}terraform/aws/ec2/`,
+                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}terraform/aws/vm/`,
                 {
                     method: "POST",
-                    body: eC2Configuration,
+                    body: VMConfiguration,
                 }
             );
 
@@ -164,8 +171,8 @@ export default function CreateEC2({ setWarning, setToken }) {
 
                 setTerminalOutput({
                     terraform: data.stdOut,
-                    ssh: eC2.createNewSSHKey ?
-                        <Downloader key={Math.random()} content={data.privateSSHKey} name={eC2.newSSHKeyName + ".pem"} title={"download private ssh key"} />
+                    ssh: vm.createNewSSHKey ?
+                        <Downloader key={Math.random()} content={data.privateSSHKey} name={vm.newSSHKeyName + ".pem"} title={"download private ssh key"} />
                         : ""
                 });
             } else {
@@ -198,117 +205,139 @@ export default function CreateEC2({ setWarning, setToken }) {
                         <div className="card-body p-md-5 ">
                             <div className="row justify-content-center d-flex justify-content-center align-items-center">
                                 <div className="col-12">
-                                    <form onSubmit={handleCreateEC2}>
+                                    <form onSubmit={handleCreateVM}>
                                         <h3 className="text-center h3 mb-2 mx-1 mx-md-4 row">
-                                            <p>create an EC2</p>
+                                            <p>create an VM</p>
                                             <button
                                                 className="btn btn-light btn-lg ml-auto" title="Reset">
                                                 <i className="bi bi-trash3-fill cursor-pointer"
                                                     onClick={() => {
-                                                        setEC2(INIT.ec2);
-                                                        setDisabled(INIT.disabled);
+                                                        setVM(INIT.VM);
+                                                        setDisabled(INIT.DISABLED);
                                                         setChooseFrom((prev) => ({
                                                             accounts: prev.accounts,
-                                                            vPCs: [],
+                                                            vns: [],
                                                             subnets: [],
                                                             securityGroups: [],
-                                                            sSHKeys: []
+                                                            sshKeys: []
                                                         }))
                                                         setCreateButtonContent(<span>Create</span>)
-                                                    }}></i></button>
+                                                    }}></i>
+                                            </button>
                                         </h3>
 
                                         <label className="form-label">
-                                            account
+                                            Account
                                         </label>
                                         <select
                                             type="text"
                                             id="account"
                                             name="account"
-                                            value={eC2.account}
+                                            value={vm.account}
                                             className="form-select w-100 bg-light border-0"
                                             onChange={handleInputChange}
                                             required
                                         > <option value="" defaultValue disabled>choose an existant account</option>
                                             {chooseFrom.accounts.map(name => (
-                                                name.startsWith("aws") &&
+                                                name.startsWith("azure") &&
                                                 <option key={name} value={name}>{name}</option>
                                             ))}
                                         </select>
                                         <br />
                                         <br />
 
+
                                         <Separation desc="Placement" />
 
                                         <label className="form-label">
-                                            region
+                                            Location
                                         </label>
                                         <select
                                             type="text"
-                                            id="region"
-                                            name="region"
-                                            value={eC2.region}
-                                            disabled={disabled.region}
+                                            id="location"
+                                            name="location"
+                                            value={vm.location}
+                                            disabled={disabled.location}
                                             className="form-select w-100 bg-light border-0"
                                             onChange={handleInputChange}
                                             required
                                         >
-                                            <option value="" defaultValue disabled>Choose an installation region</option>
-                                            {regions.map((region, index) => (
+                                            <option value="" defaultValue disabled>Choose a location</option>
+                                            {locations.map((region, index) => (
                                                 <option key={index} value={region}>{region}</option>
+                                            ))}
+                                        </select>
+                                        <br />
+                                        <br />
+                                        <label className="form-label">
+                                            Resource group
+                                        </label>
+
+                                        <select
+                                            type="text"
+                                            id="resourceGroup"
+                                            name="resourceGroup"
+                                            value={vm.resourceGroup}
+                                            className="form-select w-100 bg-light border-0"
+                                            onChange={handleInputChange}
+                                            disabled={disabled.resourceGroup}
+                                            required
+                                        >
+                                            <option value="" defaultValue disabled>choose a resource group</option>
+                                            {chooseFrom.resourceGroups.map(resourceGroup => (
+                                                <option key={resourceGroup} value={resourceGroup} disabled={resourceGroup.startsWith("there is")}>{resourceGroup}</option>
+                                            ))}
+                                        </select>
+                                        <br />
+                                        <br />
+
+
+                                        <label className="form-label">
+                                            Virtual network
+                                        </label>
+                                        <select
+                                            id="vn"
+                                            name="vn"
+                                            className="form-select w-100 bg-light border-0"
+                                            value={vm.vn}
+                                            onChange={handleInputChange}
+                                            disabled={disabled.vn}
+                                            required
+                                        >
+                                            <option value="" defaultValue disabled>Choose a vn</option>
+                                            {chooseFrom.vns.map(vn => (
+                                                <option key={vn['id']} value={vn['name']} disabled={vn['name'].startsWith("there")}>
+                                                    {vn['name']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                                    {vn['cidrBlock']}/{vn['mask']}
+                                                </option>
+
+
                                             ))}
                                         </select>
                                         <br />
                                         <br />
 
                                         <label className="form-label">
-                                            virtual private cloud
-                                        </label>
-                                        <select
-                                            id="vPC"
-                                            name="vPC"
-                                            className="form-select w-100 bg-light border-0"
-                                            value={eC2.vPC}
-                                            onChange={handleInputChange}
-                                            disabled={disabled.vPC}
-                                            required
-                                        >
-                                            <option value="" defaultValue disabled>Choose a VPC</option>
-                                            {chooseFrom.vPCs.length > 0 ? chooseFrom.vPCs.map(vPC => (
-                                                <option key={vPC['VPC ID']} value={vPC['VPC ID']} >
-                                                    {vPC['VPC ID']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                    {vPC['CIDR Block']}
-                                                </option>
-
-
-                                            )) : <option disabled>there is no VPCs in the current region</option>}
-                                        </select>
-                                        <br />
-                                        <br />
-
-                                        <label className="form-label">
-                                            subnet
+                                            Subnet
                                         </label>
                                         <select
                                             id="subnet"
                                             name="subnet"
                                             className="form-select w-100 bg-light border-0"
-                                            value={eC2.subnet}
+                                            value={vm.subnet}
                                             disabled={disabled.subnet}
                                             onChange={handleInputChange}
                                             required
                                         >
                                             <option value="" defaultValue disabled>Choose a subnet</option>
-                                            {chooseFrom.subnets.length > 0 ?
-                                                (chooseFrom.subnets
-                                                    .filter(subnet => (subnet["VPC ID"] == eC2.vPC || subnet["VPC ID"] === '-'))
-                                                    .map(subnet => (
-                                                        <option key={subnet['Subnet ID']} value={subnet['Subnet ID']} disabled={subnet['VPC ID'] === '-'}>
-                                                            {subnet['Subnet ID']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                            {subnet['CIDR Block']}
-                                                        </option>
+                                            {(chooseFrom.subnets
+                                                .map(subnet => (
+                                                    <option key={subnet['name']} value={subnet['id']} disabled={subnet['cidrBlock'] == '-'}>
+                                                        {subnet['name']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                                        {subnet['cidrBlock']}
+                                                    </option>
 
-                                                    ))) : null}
+                                                )))}
                                         </select>
                                         <br />
                                         <br />
@@ -318,29 +347,24 @@ export default function CreateEC2({ setWarning, setToken }) {
                                             Security group
                                         </label>
                                         <select
-                                            id="securityGroupe"
-                                            name="securityGroupe"
+                                            id="securityGroup"
+                                            name="securityGroup"
                                             className="form-select w-100 bg-light border-0"
-                                            value={eC2.securityGroupe}
+                                            value={vm.securityGroup}
                                             onChange={handleInputChange}
-                                            disabled={disabled.securityGroupe}
+                                            disabled={disabled.securityGroup}
                                             required
                                         >
                                             <option value="" defaultValue disabled>Choose a security groupe</option>
                                             {
-                                                chooseFrom.securityGroups.length > 0 ? (
+                                                (
                                                     chooseFrom.securityGroups
-                                                        .filter(securityGroup => securityGroup['vpcId'] === eC2.vPC)
                                                         .map(securityGroup => (
-                                                            <option key={securityGroup['groupId']} value={securityGroup['groupId']}>
-                                                                {securityGroup['groupId']}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                                                {securityGroup['groupName']}
+                                                            <option key={securityGroup.id} value={securityGroup.id} disabled={securityGroup.id === "-"}>
+                                                                {securityGroup.name}
                                                             </option>
                                                         ))
-                                                ) : (
-                                                    <option disabled>There are no Security Groups in the current Region</option>
-                                                )
-                                            }
+                                                )}
 
 
                                         </select>
@@ -351,7 +375,7 @@ export default function CreateEC2({ setWarning, setToken }) {
                                         <input
                                             type="checkbox"
                                             onClick={() => {
-                                                setEC2((prevConfig) => ({ ...prevConfig, autoPublicIp: !prevConfig.autoPublicIp }))
+                                                setVM((prevConfig) => ({ ...prevConfig, autoPublicIp: !prevConfig.autoPublicIp }))
                                             }}
                                             style={{ accentColor: "black" }} defaultChecked />&nbsp;&nbsp;&nbsp;Auto assign public ipv4 address
                                         <br />
@@ -360,14 +384,14 @@ export default function CreateEC2({ setWarning, setToken }) {
                                             id="existentSSHKeyName"
                                             name="existentSSHKeyName"
                                             className="form-select w-100 bg-light border-0"
-                                            value={eC2.existentSSHKeyName}
+                                            value={vm.existentSSHKeyName}
                                             onChange={handleInputChange}
-                                            disabled={eC2.createNewSSHKey}
-                                            required={!eC2.createNewSSHKey}
+                                            disabled={vm.createNewSSHKey}
+                                            required={!vm.createNewSSHKey}
                                         >
                                             <option value="" defaultValue disabled>Choose an existant SSH key</option>
-                                            {chooseFrom.sSHKeys.map(keyName => (
-                                                <option key={keyName} value={keyName} disabled={keyName == 'There is no SSH keys'}>
+                                            {chooseFrom.sshKeys.map(keyName => (
+                                                <option key={keyName} value={keyName} disabled={keyName.startsWith("there is")}>
                                                     {keyName}
                                                 </option>
                                             ))}
@@ -379,8 +403,8 @@ export default function CreateEC2({ setWarning, setToken }) {
                                             <input
                                                 type="checkbox"
                                                 style={{ accentColor: "black" }}
-                                                checked={eC2.createNewSSHKey}
-                                                onChange={() => { setEC2((prev) => ({ ...prev, createNewSSHKey: !prev.createNewSSHKey })) }}
+                                                checked={vm.createNewSSHKey}
+                                                onChange={() => { setVM((prev) => ({ ...prev, createNewSSHKey: !prev.createNewSSHKey })) }}
                                             />
                                             <span className="mx-1">Create new SSH key</span>
                                         </label>
@@ -389,12 +413,12 @@ export default function CreateEC2({ setWarning, setToken }) {
                                             type="text"
                                             id="newSSHKeyName"
                                             name="newSSHKeyName"
-                                            value={eC2.newSSHKeyName}
+                                            value={vm.newSSHKeyName}
                                             placeholder="my_custom_SSH_key_name"
                                             className="form-control mb-2"
-                                            onChange={(e) => { setEC2((prev) => ({ ...prev, newSSHKeyName: e.target.value })) }}
-                                            required={eC2.createNewSSHKey}
-                                            disabled={!eC2.createNewSSHKey}
+                                            onChange={(e) => { setVM((prev) => ({ ...prev, newSSHKeyName: e.target.value })) }}
+                                            required={vm.createNewSSHKey}
+                                            disabled={!vm.createNewSSHKey}
                                         />
                                         <br />
 
@@ -403,12 +427,13 @@ export default function CreateEC2({ setWarning, setToken }) {
                                         </label>
                                         <select
                                             type="text"
-                                            id="instanceSize"
-                                            name="instanceSize"
-                                            value={eC2.instanceSize}
+                                            id="vmSize"
+                                            name="vmSize"
+                                            value={vm.vmSize}
                                             aria-label="Instance Size"
                                             className="form-select w-100 bg-light border-0"
                                             onChange={handleInputChange}
+                                            disabled={disabled.vmSize}
                                             required
                                         >
                                             <option value="" defaultValue disabled>Choose a size</option>
@@ -425,7 +450,8 @@ export default function CreateEC2({ setWarning, setToken }) {
                                         <input
                                             type="text"
                                             id="serverName"
-                                            value={eC2.serverName}
+                                            disabled={disabled.serverName}
+                                            value={vm.serverName}
                                             name="serverName"
                                             placeholder="my-web-server"
                                             className="form-control mb-2"
@@ -434,15 +460,59 @@ export default function CreateEC2({ setWarning, setToken }) {
                                         />
                                         <br />
                                         <Separation desc="Pre-configuration" title="New SSH key, opened port 22 and a public IP Address are required" />
+                                        <label className="form-label">
+                                            Admin username
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="adminUsername"
+                                            name="adminUsername"
+                                            disabled={disabled.adminUsername}
+                                            value={vm.adminUsername}
+                                            placeholder="Admin"
+                                            className="form-control mb-3"
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                        <label className="form-label">
+                                            Admin password
+                                        </label>
+                                        <input
+                                            type="password"
+                                            id="adminPassword"
+                                            name="adminPassword"
+                                            disabled={disabled.adminPassword}
+                                            value={vm.adminPassword}
+                                            pattern="^(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[^\w\d\s:])([^\s]){8,32}$"
+                                            placeholder="P@$$word_1443"
+                                            title="✦ Contains at least one lowercase letter (a-z)&#10;
+                                            ✦ Contains at least one uppercase letter (A-Z)
+                                            ✦ Contains at least one digit (0-9)&#10;
+                                            ✦ Contains at least one special character from the set: @$!%*?&&#10;
+                                            ✦ Is at least 8 characters long"
+                                            className="form-control mb-4"
+                                            onChange={handleInputChange}
+                                            required
+                                        />
 
-                                        {eC2.createNewSSHKey && eC2.autoPublicIp && (
+                                        <label className="form-label">
+                                            <input
+                                                type="checkbox"
+                                                style={{ accentColor: "black" }}
+                                                checked={vm.disablePasswordAuthentication}
+                                                onChange={() => { setVM((prev) => ({ ...prev, disablePasswordAuthentication: !prev.disablePasswordAuthentication })) }}
+                                            />
+                                            <span className="mx-1">Disable password authentication</span>
+                                        </label>
+                                        {vm.createNewSSHKey && vm.autoPublicIp && (
                                             <>
                                                 <label className="form-label">Preinstall software</label>
                                                 <select
                                                     id="toInstall"
                                                     name="toInstall"
                                                     className="form-select w-100 bg-light border-0"
-                                                    value={eC2.toInstall}
+                                                    disabled={disabled.toInstall}
+                                                    value={vm.toInstall}
                                                     onChange={handleInputChange}
                                                 >
                                                     <option value="" disabled>choose a software to install</option>
@@ -453,22 +523,22 @@ export default function CreateEC2({ setWarning, setToken }) {
                                                 </select>
                                                 <br />
                                                 <br />
-                                                {eC2.toInstall === "apache2" && (
+                                                {vm.toInstall === "apache2" && (
                                                     <>
                                                         <label className="form-label">GitHub link<i title="must contain an index.html file on the root directory" className="ml-2 bi bi-question-circle-fill cursor-pointer"></i></label>
                                                         <input
                                                             type="text"
                                                             id="githubLink"
-                                                            value={eC2.githubLink}
+                                                            value={vm.githubLink}
                                                             name="githubLink"
                                                             placeholder="https://www.github.com/johndoe/portfolio"
                                                             className="form-control mb-2"
+                                                            pattern="/^(?:https?:\/\/)?(?:www\.)?github\.com\/([a-zA-Z0-9._-]+)\/([a-zA-Z0-9._-]+)(?:\/)?$/"
                                                             onChange={handleInputChange}
-                                                            required
                                                         />
                                                     </>
                                                 )}
-                                                <div class="mt-3 alert alert-warning" role="alert">
+                                                <div className="mt-3 alert alert-warning" role="alert">
                                                     make sure that the subnet is public, and that the ports you need are open including SSH (22).
                                                 </div>
                                             </>

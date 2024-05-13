@@ -11,11 +11,6 @@ export default function ProfileNavbar({ token }) {
                     <Navbar.Toggle aria-controls="responsive-navbar-nav" className="ml-auto" style={{ padding: '0.5rem' }} />
                     <Navbar.Collapse id="responsive-navbar-nav" className="justify-content-end">
                         <Nav className="ml-auto baloo-da-beautiful font-weight-bold h5" >
-                            <Link href="/profile/providers" passHref legacyBehavior>
-                                <Nav.Link className="mx-1  d-flex align-items-center custom-dark-button">
-                                    <div><i className="bi bi-cloud mx-3"></i>cloud providers</div>
-                                </Nav.Link>
-                            </Link>
                             <Link href="/profile/credentials" passHref legacyBehavior>
                                 <Nav.Link className="mx-1  d-flex align-items-center custom-dark-button">
                                     <div><i className="bi bi-key-fill mx-3"></i>credentiels</div>

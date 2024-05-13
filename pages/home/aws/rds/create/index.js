@@ -1,10 +1,11 @@
 import { useState, useContext, useEffect } from 'react';
-import { getCredentials, separation, regions } from "../../../../../utils/functions";
-import { FullContext } from "../../../../_app";
+import { regions } from "@/utils/aws";
+import { getCredentials, Separation } from '@/utils/general';
+import { AuthContext } from "@/pages/_app";
 
 export default function CreateRDS({ setWarning, setToken }) {
 
-  const { token } = useContext(FullContext);
+  const { token } = useContext(AuthContext);
 
   const INIT = {
     database: {
@@ -53,11 +54,11 @@ export default function CreateRDS({ setWarning, setToken }) {
   const [terminalOutput, setTerminalOutput] = useState("");
 
 
+  const databaseArray = Object.keys(database);
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const databaseArray = Object.keys(database);
     const index = databaseArray.indexOf(name);
-    (index !== -1) && setDisabled((prev) => ({ ...prev, [databaseArray[index + 1]]: false }))
+    (index !== -1) && setDisabled((prev) => ({ ...prev, [databaseArray[index]] : true,[databaseArray[index + 1]]: false }))
     name === "account" && setDatabase(INIT.database);
     name === "engine" && getEngineVersions(value);
     setDatabase({ ...database, [name]: value });
@@ -88,7 +89,7 @@ export default function CreateRDS({ setWarning, setToken }) {
         }
       }
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/terraform/aws/rds/?`,
+        `${process.env.NEXT_PUBLIC_BACKEND_ADDR}terraform/aws/rds/?`,
         {
           method: "POST",
           body: databaseConfig
@@ -119,9 +120,9 @@ export default function CreateRDS({ setWarning, setToken }) {
         isShown: true
       });
       return false
-    }finally {
+    } finally {
       setCreateButtonContent(<span>Create</span>);
-  }
+    }
 
   };
 
@@ -129,7 +130,7 @@ export default function CreateRDS({ setWarning, setToken }) {
     setChooseFrom((prev) => ({ ...prev, engineVersions: ["LOADING ..."] }))
     try {
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/rds?` +
+        `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/rds?` +
         new URLSearchParams({
           token: token,
           region: database.region,
@@ -194,10 +195,10 @@ export default function CreateRDS({ setWarning, setToken }) {
                       onChange={handleInputChange}
                     >
                       <option value="" disabled>Choose an account</option>
-                      {chooseFrom.accounts.map((account, index) => (
-
-                        <option key={index} value={account}>
-                          {account}
+                      {chooseFrom.accounts.map((name, index) => (
+                        name.startsWith("aws") &&
+                        <option key={index} value={name}>
+                          {name}
                         </option>
 
                       ))}
@@ -222,7 +223,7 @@ export default function CreateRDS({ setWarning, setToken }) {
                       ))}
                     </select>
                     <br />
-                    {separation("database")}
+                    <Separation desc="database" />
                     <label className="form-label">
                       Database Name:
                     </label>

@@ -1,11 +1,11 @@
 import { useRouter } from "next/router";
 import { useEffect, useState, useContext } from "react";
-import ProfileNavbar from '../../../comps/ProfileNavbar.js'; // Importing the profile component
-import { FullContext } from "../../_app";
-import { getPersonnalInfo } from "../../../utils/functions.js";
+import ProfileNavbar from '@/comps//ProfileNavbar.js'; // Importing the profile component
+import { AuthContext } from "@/pages/_app";
+import { getPersonnalInfo } from "@/utils/general.js";
 
 export default function ProfileCredentials({setWarning}) {
-    const { token } = useContext(FullContext);
+    const { token } = useContext(AuthContext);
     const [updateButtonContent, setUpdateButtonContent] = useState(<span>Update</span>)
     const CustomInput = ({ holder, id, label, showPen }) => {
         return (
@@ -91,7 +91,7 @@ export default function ProfileCredentials({setWarning}) {
             }
             if (willUpdate) {
                 const response = await fetch(
-                    `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/users/`,
+                    `${process.env.NEXT_PUBLIC_BACKEND_ADDR}users/`,
                     {
                         method: "PUT",
                         body: updatedData,

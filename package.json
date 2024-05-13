@@ -1,6 +1,6 @@
 {
-  "name": "next-routing-example",
-  "version": "0.1.0",
+  "name": "matious-core",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,14 +8,33 @@
     "start": "next start"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/material": "^5.15.14",
     "@nextui-org/react": "^2.2.9",
+    "@radix-ui/react-label": "^2.0.2",
+    "@tabler/icons-react": "^3.1.0",
+    "add": "^2.0.6",
     "bootstrap": "^4.6.2",
     "bootstrap-icons": "^1.11.3",
-    "framer-motion": "^11.0.7",
+    "card": "^2.5.4",
+    "clsx": "^2.1.0",
+    "embla-carousel-react": "^8.0.0",
+    "file-saver": "^2.0.5",
+    "framer-motion": "^11.0.24",
+    "keen-slider": "^6.8.6",
     "next": "^14.1.0",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.1",
     "react-dom": "^18.2.0",
-    "sass": "^1.71.1"
+    "sass": "^1.71.1",
+    "shadcn-ui": "^0.2.3",
+    "tailwind-merge": "^2.2.2",
+    "typewriter-effect": "^2.21.0"
+  },
+  "devDependencies": {
+    "babel-plugin-module-resolver": "^5.0.2",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.3"
   }
 }

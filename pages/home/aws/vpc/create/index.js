@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { useRouter } from "next/router";
-import { FullContext } from "../../../../_app";
-import { getCredentials, regions, separation, validateIPAddress } from "../../../../../utils/functions";
+import { AuthContext } from "@/pages/_app";
+import { regions, validateIPAddress } from "@/utils/aws";
+import { getCredentials } from "@/utils/general";
 
 export default function CreateVPC({ setWarning, setToken }) {
-    const { token } = useContext(FullContext);
+    const { token } = useContext(AuthContext);
     const router = useRouter();
 
     const [terminalOutput, setTerminalOutput] = useState("");
@@ -99,7 +100,7 @@ export default function CreateVPC({ setWarning, setToken }) {
 
     const handleCreateVPC = async (e) => {
         e.preventDefault();
-        if(!vPCConfigIsComplete()){
+        if (!vPCConfigIsComplete()) {
             return false
         }
         setCreateButtonContent(<span><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> please wait</span>);
@@ -175,6 +176,7 @@ export default function CreateVPC({ setWarning, setToken }) {
                                             required
                                         > <option value="" defaultValue disabled>choose an existant account</option>
                                             {chooseFrom.accounts.map(name => (
+                                                name.startsWith("aws") &&
                                                 <option key={name} value={name}>{name}</option>
                                             ))}
                                         </select>

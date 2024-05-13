@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
-import { FullContext } from "../../../_app";
-import { getCredentials, getRDSs, regions, wait } from "../../../../utils/functions";
+import { AuthContext } from "@/pages/_app";
+import { getRDSs, regions } from "@/utils/aws";
+import { getCredentials, wait } from "@/utils/general";
 
 export default function RDS({ setWarning, setToken }) {
-    const { token } = useContext(FullContext);
+    const { token } = useContext(AuthContext);
     const router = useRouter();
 
     // State for filter and instances
@@ -54,7 +55,7 @@ export default function RDS({ setWarning, setToken }) {
 
         try {
             const response = await fetch(
-                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/rds/`, {
+                `${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}aws/rds/`, {
                 method: "PUT",   // UPdate the stete of RDS
                 body: actionConfig,
             });
@@ -74,7 +75,7 @@ export default function RDS({ setWarning, setToken }) {
                         return database
                     })
                 }));
-                
+
 
             } else {
                 setWarning({
@@ -106,6 +107,7 @@ export default function RDS({ setWarning, setToken }) {
                                     >
                                         <option value="" disabled>Choose an account</option>
                                         {filter.accounts.map(name => (
+                                            name.startsWith("aws") &&
                                             <option key={name} value={name}>{name}</option>
                                         ))}
                                     </select>

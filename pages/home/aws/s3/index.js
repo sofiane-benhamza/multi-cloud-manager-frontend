@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
-import { FullContext } from "../../../_app";
-import { getCredentials, getS3s, regions, wait } from "../../../../utils/functions";
+import { AuthContext } from "@/pages/_app";
+import { getS3s, regions } from "@/utils/aws";
+import { getCredentials, wait } from "@/utils/general";
 
 export default function S3({ setWarning }) {
-    const { token } = useContext(FullContext);
+    const { token } = useContext(AuthContext);
     const router = useRouter();
 
     // State for filter and vpcs
@@ -44,7 +45,7 @@ export default function S3({ setWarning }) {
     const handleDeleteS3 = async (bucket) => {
         try {
             const response = await fetch(
-                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/s3/?` +
+                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/s3/?` +
                 new URLSearchParams({
                     token: token,
                     region: filter.region,
@@ -91,6 +92,7 @@ export default function S3({ setWarning }) {
                                     >
                                         <option value="" disabled>Choose an account</option>
                                         {filter.accounts.map(name => (
+                                            name.startsWith("aws") &&
                                             <option key={name} value={name}>{name}</option>
                                         ))}
                                     </select>

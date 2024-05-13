@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { useRouter } from "next/router";
-import { FullContext } from "../../../../_app";
-import { getCredentials, regions, separation } from "../../../../../utils/functions";
+import { AuthContext } from "@/pages/_app";
+import { regions } from "@/utils/aws";
+import { getCredentials } from "@/utils/general";
 
 export default function CreateS3({ setWarning, setToken }) {
-    const { token } = useContext(FullContext);
+    const { token } = useContext(AuthContext);
     const router = useRouter();
 
     const [terminalOutput, setTerminalOutput] = useState("");
@@ -107,7 +108,7 @@ export default function CreateS3({ setWarning, setToken }) {
             }
 
             const response = await fetch(
-                "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/terraform/aws/s3/",
+                `${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}terraform/aws/s3/`,
                 {
                     method: "POST",
                     body: bucketConfig,
@@ -172,6 +173,7 @@ export default function CreateS3({ setWarning, setToken }) {
                                             required
                                         > <option value="" defaultValue disabled>choose an existant account</option>
                                             {chooseFrom.accounts.map(name => (
+                                                name.startsWith("aws") &&
                                                 <option key={name} value={name}>{name}</option>
                                             ))}
                                         </select>

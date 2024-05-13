@@ -1,12 +1,12 @@
 import React, { useContext } from 'react';
-import bg from "../public/404.gif";
+import bg from "@/public/404.gif";
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { FullContext } from './_app';
+import { AuthContext } from './_app';
 
 const Custom404 = () => {
   const router = useRouter();
-  const {token} = useContext(FullContext);
+  const {token} = useContext(AuthContext);
   const redirect = (path) => {
         if(path=="back"){
           router.back()
@@ -14,6 +14,7 @@ const Custom404 = () => {
           router.push(path)
         }
   }
+  
   return (
     <div className="d-flex flex-column justify-content-center align-items-center vh-100 tilt-warp-title">
       <h1>404 - Page Not Found</h1>

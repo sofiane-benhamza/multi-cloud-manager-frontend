@@ -1,37 +1,37 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
 import { AuthContext } from "@/pages/_app";
-import {  getEC2s, regions } from "@/utils/aws";
+import { getAmplifyApps, regions } from "@/utils/aws";
 import { getCredentials, wait } from "@/utils/general";
 
-export default function EC2({ setWarning, setToken}) {
+export default function AmplifyApp({ setWarning, setToken }) {
     const { token } = useContext(AuthContext);
     const router = useRouter();
 
     // State for filter and instances
-    const [filter, setFilter] = useState({ account: "", region: "", accounts: [], instances: [] });
+    const [filter, setFilter] = useState({ account: "", region: "", accounts: [], applications: [] });
 
     // Effect to fetch account names when component mounts
     useEffect(() => {
         getCredentials(token, setFilter).then((ok) => {
-            if(!ok){
+            if (!ok) {
                 setToken("expired")
             }
         });
     }, []);
 
-    // Effect to fetch EC2 instances when filter changes
+    // Effect to fetch applications when filter changes
     useEffect(() => {
         if (filter.account && filter.region) {
-            setFilter((prev) => ({ ...prev, instances: [{ name: wait, id: wait, state:wait, size: wait, privateIp: wait, publicIp: wait }] }))
-            getEC2s(token, filter.account, filter.region, setFilter).then((isOk) => {
+            setFilter((prev) => ({ ...prev, applications: [{ name: wait, id: wait, repository: wait, technology: wait }] }))
+            getAmplifyApps(token, filter.account, filter.region, setFilter).then((isOk) => {
                 if (!isOk) {
                     setWarning({
                         message: "there is a problem with the credentials provided !",
                         type: "danger",
                         isShown: true
                     })
-                    setFilter((prev) => ({ ...prev, instances: [{ name: "-", id: "-", state:"-", size: "-", privateIp: "-", publicIp: "-" }] }))
+                    setFilter((prev) => ({ ...prev, applications: [{ name: "-", id: "-", repository: "-", technology: "-" }] }))
                 }
             });
 
@@ -45,35 +45,33 @@ export default function EC2({ setWarning, setToken}) {
     };
 
     //handle actions
-    const handleEC2Action = async (action, eC2Id) => {
-        const actionConfig = new FormData();
-
-        actionConfig.append("token", token);
-        actionConfig.append("uniqueName", filter.account);
-        actionConfig.append("region", filter.region);
-        actionConfig.append("eC2Id", eC2Id);
-        actionConfig.append("action", action)
-
+    const handleAmplifyAppDelete = async (appId) => {
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/ec2/`, {
-                method: "PUT",   //update
-                body: actionConfig,
+                process.env.NEXT_PUBLIC_BACKEND_ADDR + "aws/amplify/?" + new URLSearchParams({
+                    token: token,
+                    account: filter.account,
+                    region: filter.region,
+                    appId: appId
+
+                }), {
+                method: "DELETE",
             });
+
             if (response.ok) {
                 setWarning({
-                    message: `action ${action} has been applied on instance ${filter.instances.find(instance => instance.id === eC2Id)?.name || null}  successfully`,
+                    message: `the application ${filter.applications.find(application => application.id === appId)?.name || null} has been deleted successfully`,
                     type: "success",
                     isShown: true
                 })
                 setFilter(prev => ({
                     ...prev,
-                    instances: prev.instances.map(instance => {
-                        if (instance.id === eC2Id) {
-                            return { ...instance, state: "pending", publicIp: "N/A" };
+                    applications: prev.applications.map(application => {
+                        if (application.id === appId) {
+                            return { name: "-", id: "-", repository: "-", technology: "-" };
                         }
-                        return instance;
+                        return application;
                     })
                 }));
 
@@ -108,7 +106,7 @@ export default function EC2({ setWarning, setToken}) {
                                         <option value="" disabled>Choose an account</option>
                                         {filter.accounts.map(name => (
                                             name.startsWith("aws") &&
-                                                <option key={name} value={name}>{name}</option>
+                                            <option key={name} value={name}>{name}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -128,7 +126,7 @@ export default function EC2({ setWarning, setToken}) {
 
                                     </select>
                                 </div>
-                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getEC2s(token, filter.account, filter.region, setFilter) }} disabled={!(filter.account && filter.region)}>
+                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getAmplifyApps(token, filter.account, filter.region, setFilter) }} disabled={!(filter.account && filter.region)}>
                                     <i className="bi bi-arrow-clockwise"></i>
                                 </button>
                             </div>
@@ -138,41 +136,20 @@ export default function EC2({ setWarning, setToken}) {
                                         <tr>
                                             <th className="text-center">ID</th>
                                             <th className="text-center">Name</th>
-                                            <th className="text-center">Size</th>
-                                            <th className="text-center">State</th>
-                                            <th className="text-center">Private&nbsp;IP</th>
-                                            <th className="text-center">Public&nbsp;IP</th>
+                                            <th className="text-center">repository</th>
+                                            <th className="text-center">technology</th>
                                             <th className="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filter.instances.length > 0 ? (filter.instances.map((instance, index) => (
+                                        {filter.applications.length > 0 ? (filter.applications.map((application, index) => (
                                             <tr key={index}>
-                                                <td className="text-center">{instance.id}</td>
-                                                <td className="text-center">{instance.name}</td>
-                                                <td className="text-center">{instance.size}</td>
+                                                <td className="text-center">{application.id}</td>
+                                                <td className="text-center">{application.name}</td>
+                                                <td className="text-center" title={application.repository} ><button disabled={application.id == "-"} class="btn btn-dark"><a href={application.repository} className="bi bi-box-arrow-up-right" target="_blank"></a></button></td>
+                                                <td className="text-center">{application.technology}</td>
                                                 <td className="text-center">
-                                                    {instance.state === "running" ? (
-                                                        <span className="text-success">running</span>
-                                                    ) : instance.state === "stopped" ? (
-                                                        <span className="text-dark">stopped</span>
-                                                    ) : instance.state === "terminated" ? (
-                                                        <span className="text-danger">terminated</span>
-                                                    ) : (
-                                                        <span>{instance.state}</span>
-                                                    )}
-                                                </td>
-
-                                                <td className="text-center">{instance.privateIp}</td>
-                                                <td className="text-center">{instance.publicIp}</td>
-                                                <td className="text-center">
-                                                    <button className="btn mx-1 btn-success" title="Start" disabled={instance.state !== "stopped"} onClick={() => { handleEC2Action("start", instance.id) }}>
-                                                        <i className="bi bi-play-fill"></i>
-                                                    </button>
-                                                    <button className="btn mx-1 btn-dark" title="Shutdown" disabled={instance.state !== "running"} onClick={() => { handleEC2Action("shutdown", instance.id) }}>
-                                                        <i className="bi bi-sign-stop"></i>
-                                                    </button>
-                                                    <button className="btn mx-1 btn-danger" title="Terminate" disabled={instance.state !== "running" && instance.state !== "stopped"} onClick={() => { handleEC2Action("terminate", instance.id) }}>
+                                                    <button className="btn mx-1 btn-danger" title="Terminate" disabled={application.id == "-"} onClick={() => { handleAmplifyAppDelete(application.id) }}>
                                                         <i className="bi bi-x-circle"></i>
                                                     </button>
                                                 </td>
@@ -184,9 +161,7 @@ export default function EC2({ setWarning, setToken}) {
                                             <td className="px-2">{ }</td>
                                             <td className="px-2">{ }</td>
                                             <td className="px-2">{ }</td>
-                                            <td className="px-2">{ }</td>
-                                            <td className="px-2">{ }</td>
-                                            <td className="px-2 w-100 btn btn-success" onClick={() => { router.push('./ec2/create'); }}><i className="bi bi-cloud-plus p-2"></i>Create an EC2</td>
+                                            <td className="px-2 w-100 btn btn-success" onClick={() => { router.push('./amplify/create'); }}><i className="bi bi-cloud-plus p-2"></i>Deploy an application</td>
                                         </tr>
                                     </tbody>
                                 </table>

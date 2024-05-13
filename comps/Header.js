@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { Navbar, Nav } from 'react-bootstrap';
 import { useContext, useEffect, useState } from 'react';
-import { FullContext } from '../pages/_app';
+import { AuthContext } from '@/pages/_app';
 import { useRouter } from 'next/router';
 
 export default function Header({ disconnect, username }) {
     const router = useRouter();
-    const { isLoggedIn } = useContext(FullContext);
+    const { isLoggedIn } = useContext(AuthContext);
 
     const [isNotAtTop, setIsNotAtTop] = useState(false);
 

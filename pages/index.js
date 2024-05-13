@@ -1,14 +1,19 @@
 "use client";
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import Slider from "../comps/Slider";
+import Slider from "@/comps/Slider";
 import Typewriter from 'typewriter-effect';
 import { useEffect, useContext } from 'react';
-import { FullContext } from "./_app";
+import { AuthContext } from "./_app";
 
 export default function Home() {
 
-  const { isLoggedIn } = useContext(FullContext);
+  const { isLoggedIn } = useContext(AuthContext);
+  const router = useRouter();
+
+  const services = [{ theme: "primary", title: "DATA LAYER", comment: "Easy to use", desc: "Matious Core is a solution that provides developers and cloud enthusiasts, that works with more than one provider, a faster manipulation of Multi-Cloud infrastracture" },
+  { theme: "warning", title: "FRONTEND CLOUD", comment: "Faster deployment", desc: "all it takes here to get your application online, is to provide your github repository, and the way you want it to be deployed, and we take care of everything else." },
+  { theme: "success", title: "EXTENSIVE UI", comment: "Friendly Editors", desc: "We bring all your existents resources into Matious core, by one click, from any cloud provider, in a easy friendly way, with much easier manipulation options" }]
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -16,7 +21,8 @@ export default function Home() {
     }
   }, [isLoggedIn])
 
-  const router = useRouter();
+
+
   return (
     <>
       <Head>
@@ -42,15 +48,26 @@ export default function Home() {
 
           </div>
         </div>
-        {DefinitionCard()}
+        <TypewriterCard />
         <hr />
         <div className='d-flex flex-wrap container py-5'>
-          {Service("primary", "DATA LAYER", "Easy to use", "Matious Core is a solution that provides developers and cloud enthusiasts, that works with more than one provider, a faster manipulation of Multi-Cloud infrastracture")}
-          {Service("warning", "FRONTEND CLOUD", "Faster deployment", "all it takes here to get your application online, is to provide your github repository, and the way you want it to be deployed, and we take care of everything else.")}
-          {Service("success", "EXTENSIVE UI", "Friendly Editors", "We bring all your existents resources into Matious core, by one click, from any cloud provider, in a easy friendly way, with much easier manipulation options")}
+          {services.map((service, index) => (
+            <Service key={index} theme={service.theme} title={service.title} comment={service.comment} desc={service.desc} />
+          ))}
         </div>
-        <div className="text-dark d-flex container justify-content-center">
+
+        <div className="text-dark d-flex container justify-content-center overflow-hidden">
           <div className="col text-center my-5 mx-3 py-5 border border-dark rounded-10 background">
+            <span className='star' />
+            <span className='star' />
+            <span className='star' />
+            <span className='star' />
+            <span className='star' />
+            <span className='star' />
+            <span className='star' />
+            <span className='star' />
+            <span className='star' />
+            <span className='star' />
             <h1 className="h3 text-light">
               So, Ready to try Matious Core ?
             </h1>
@@ -65,7 +82,7 @@ export default function Home() {
   )
 }
 
-const DefinitionCard = () => {
+const TypewriterCard = () => {
   return (
     <div className="vw-100 d-flex flex-wrap justify-content-center align-items-center my-5">
       <div className='mt-5 p-5 border-top border-left border-bottom border-dark col-xl-3 col-lg-4 col-md-5 bg-beach'>
@@ -120,14 +137,14 @@ const DefinitionCard = () => {
   )
 }
 
-const Service = (theme, title, desc, text) => {
+const Service = ({ theme, title, comment, desc }) => {
   return (
     <div className="my-4 col-xl-4 col-lg-4 col-md-6 col-sm-10 col-xs-12">
       <div className='border border-dark rounded px-3 py-5  down-to-up h-100 d-flex flex-column justify-content-between'>
         <div>
           <span className={`p-2 alert alert-${theme}`}>{title}</span>
-          <p className="h4 pt-4">{desc}</p>
-          <p>{text}</p>
+          <p className="h4 pt-4">{comment}</p>
+          <p>{desc}</p>
         </div>
         <div>
           <hr />

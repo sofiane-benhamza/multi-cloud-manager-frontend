@@ -1,42 +1,42 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
 import { AuthContext } from "@/pages/_app";
-import {  getEC2s, regions } from "@/utils/aws";
 import { getCredentials, wait } from "@/utils/general";
+import { getVMs, locations } from "@/utils/azure";
 
-export default function EC2({ setWarning, setToken}) {
+
+export default function VM({ setWarning, setToken }) {
     const { token } = useContext(AuthContext);
     const router = useRouter();
 
-    // State for filter and instances
-    const [filter, setFilter] = useState({ account: "", region: "", accounts: [], instances: [] });
+    // state for filter and vms
+    const [filter, setFilter] = useState({ account: "", location: "", accounts: [], vms: [] });
 
     // Effect to fetch account names when component mounts
     useEffect(() => {
         getCredentials(token, setFilter).then((ok) => {
-            if(!ok){
+            if (!ok)
                 setToken("expired")
-            }
         });
     }, []);
 
-    // Effect to fetch EC2 instances when filter changes
+    // Effect to fetch VMS when filter changes
     useEffect(() => {
-        if (filter.account && filter.region) {
-            setFilter((prev) => ({ ...prev, instances: [{ name: wait, id: wait, state:wait, size: wait, privateIp: wait, publicIp: wait }] }))
-            getEC2s(token, filter.account, filter.region, setFilter).then((isOk) => {
+        if (filter.account && filter.location) {
+            setFilter((prev) => ({ ...prev, vms: [{ resourceGroup: wait, name: wait, status: wait, size: wait, privateIp: wait, publicIp: wait }] }))
+            getVMs(token, filter.account, filter.location, setFilter).then((isOk) => {
                 if (!isOk) {
                     setWarning({
                         message: "there is a problem with the credentials provided !",
                         type: "danger",
                         isShown: true
                     })
-                    setFilter((prev) => ({ ...prev, instances: [{ name: "-", id: "-", state:"-", size: "-", privateIp: "-", publicIp: "-" }] }))
+                    setFilter((prev) => ({ ...prev, vms: [{ resourceGroup: "-", name: "-", status: "-", size: "-", privateIp: "-", publicIp: "-" }] }))
                 }
             });
 
         }
-    }, [filter.account, filter.region]);
+    }, [filter.account, filter.location]);
 
     // Handle input change for filter
     const handleInputChange = (e) => {
@@ -45,35 +45,35 @@ export default function EC2({ setWarning, setToken}) {
     };
 
     //handle actions
-    const handleEC2Action = async (action, eC2Id) => {
+    const handleVMAction = async (action, vmName, resourceGroup) => {
         const actionConfig = new FormData();
 
         actionConfig.append("token", token);
-        actionConfig.append("uniqueName", filter.account);
-        actionConfig.append("region", filter.region);
-        actionConfig.append("eC2Id", eC2Id);
-        actionConfig.append("action", action)
+        actionConfig.append("account", filter.account);
+        actionConfig.append("name", vmName);
+        actionConfig.append("action", action);
+        actionConfig.append("resourceGroup", resourceGroup);
 
 
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/ec2/`, {
+                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}azure/vms/`, {
                 method: "PUT",   //update
                 body: actionConfig,
             });
             if (response.ok) {
                 setWarning({
-                    message: `action ${action} has been applied on instance ${filter.instances.find(instance => instance.id === eC2Id)?.name || null}  successfully`,
+                    message: `action ${action} has been applied on vm ${vmName}  successfully`,
                     type: "success",
                     isShown: true
                 })
                 setFilter(prev => ({
                     ...prev,
-                    instances: prev.instances.map(instance => {
-                        if (instance.id === eC2Id) {
-                            return { ...instance, state: "pending", publicIp: "N/A" };
+                    vms: prev.vms.map(vm => {
+                        if (vm.name === vmName) {
+                            return { ...vm, status: "pending", publicIp: "N/A" };
                         }
-                        return instance;
+                        return vm;
                     })
                 }));
 
@@ -107,28 +107,28 @@ export default function EC2({ setWarning, setToken}) {
                                     >
                                         <option value="" disabled>Choose an account</option>
                                         {filter.accounts.map(name => (
-                                            name.startsWith("aws") &&
-                                                <option key={name} value={name}>{name}</option>
+                                            name.startsWith("azure") &&
+                                            <option key={name} value={name}>{name}</option>
                                         ))}
                                     </select>
                                 </div>
                                 <div className="col-md-4">
-                                    <label htmlFor="region" className="form-label">Region</label><br />
+                                    <label htmlFor="location" className="form-label">Location</label><br />
                                     <select
-                                        id="region"
-                                        name="region"
-                                        value={filter.region}
+                                        id="location"
+                                        name="location"
+                                        value={filter.location}
                                         className="form-select w-50 bg-light border-0"
                                         onChange={handleInputChange}
                                     >
-                                        <option value="" disabled>Choose a region</option>
-                                        {regions.map((region, index) => (
-                                            <option key={index} value={region}>{region}</option>
+                                        <option value="" disabled>Choose a location</option>
+                                        {locations.map((location, index) => (
+                                            <option key={index} value={location}>{location}</option>
                                         ))}
 
                                     </select>
                                 </div>
-                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getEC2s(token, filter.account, filter.region, setFilter) }} disabled={!(filter.account && filter.region)}>
+                                <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getVMs(token, filter.account, filter.location, setFilter) }} disabled={!(filter.account && filter.location)}>
                                     <i className="bi bi-arrow-clockwise"></i>
                                 </button>
                             </div>
@@ -136,43 +136,36 @@ export default function EC2({ setWarning, setToken}) {
                                 <table className="table table-bordered table-striped">
                                     <thead className="thead-dark">
                                         <tr>
-                                            <th className="text-center">ID</th>
+                                            <th className="text-center">Resource Group</th>
                                             <th className="text-center">Name</th>
                                             <th className="text-center">Size</th>
-                                            <th className="text-center">State</th>
+                                            <th className="text-center">Status</th>
                                             <th className="text-center">Private&nbsp;IP</th>
                                             <th className="text-center">Public&nbsp;IP</th>
                                             <th className="text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filter.instances.length > 0 ? (filter.instances.map((instance, index) => (
+                                        {filter.vms.length > 0 ? (filter.vms.map((vm, index) => (
                                             <tr key={index}>
-                                                <td className="text-center">{instance.id}</td>
-                                                <td className="text-center">{instance.name}</td>
-                                                <td className="text-center">{instance.size}</td>
+                                                <td className="text-center">{vm.resourceGroup}</td>
+                                                <td className="text-center">{vm.name}</td>
+                                                <td className="text-center">{vm.size}</td>
                                                 <td className="text-center">
-                                                    {instance.state === "running" ? (
-                                                        <span className="text-success">running</span>
-                                                    ) : instance.state === "stopped" ? (
-                                                        <span className="text-dark">stopped</span>
-                                                    ) : instance.state === "terminated" ? (
-                                                        <span className="text-danger">terminated</span>
-                                                    ) : (
-                                                        <span>{instance.state}</span>
-                                                    )}
+                                                    {vm.status == "VM running" ? <span className="text-success">running</span> :
+                                                        vm.status == "VM deallocated" ? <span className="text-dark">stopped</span> : <span>{vm.status}</span>}
                                                 </td>
 
-                                                <td className="text-center">{instance.privateIp}</td>
-                                                <td className="text-center">{instance.publicIp}</td>
+                                                <td className="text-center">{vm.privateIp}</td>
+                                                <td className="text-center">{vm.publicIp}</td>
                                                 <td className="text-center">
-                                                    <button className="btn mx-1 btn-success" title="Start" disabled={instance.state !== "stopped"} onClick={() => { handleEC2Action("start", instance.id) }}>
+                                                    <button className="btn mx-1 btn-success" title="Start" disabled={vm.status !== "VM deallocated"} onClick={() => { handleVMAction("start", vm.name, vm.resourceGroup) }}>
                                                         <i className="bi bi-play-fill"></i>
                                                     </button>
-                                                    <button className="btn mx-1 btn-dark" title="Shutdown" disabled={instance.state !== "running"} onClick={() => { handleEC2Action("shutdown", instance.id) }}>
+                                                    <button className="btn mx-1 btn-dark" title="Shutdown" disabled={vm.status !== "VM running"} onClick={() => { handleVMAction("stop", vm.name, vm.resourceGroup) }}>
                                                         <i className="bi bi-sign-stop"></i>
                                                     </button>
-                                                    <button className="btn mx-1 btn-danger" title="Terminate" disabled={instance.state !== "running" && instance.state !== "stopped"} onClick={() => { handleEC2Action("terminate", instance.id) }}>
+                                                    <button className="btn mx-1 btn-danger" title="Terminate" disabled={vm.status !== "VM running" && vm.status !== "VM deallocated"} onClick={() => { handleVMAction("terminate", vm.name, vm.resourceGroup) }}>
                                                         <i className="bi bi-x-circle"></i>
                                                     </button>
                                                 </td>
@@ -186,7 +179,7 @@ export default function EC2({ setWarning, setToken}) {
                                             <td className="px-2">{ }</td>
                                             <td className="px-2">{ }</td>
                                             <td className="px-2">{ }</td>
-                                            <td className="px-2 w-100 btn btn-success" onClick={() => { router.push('./ec2/create'); }}><i className="bi bi-cloud-plus p-2"></i>Create an EC2</td>
+                                            <td className="px-2 w-100 btn btn-success" onClick={() => { router.push('./vm/create'); }}><i className="bi bi-cloud-plus p-2"></i>Create an VM</td>
                                         </tr>
                                     </tbody>
                                 </table>

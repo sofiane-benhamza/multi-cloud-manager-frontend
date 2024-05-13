@@ -1,22 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { usePathname } from 'next/navigation'
-import "../styles/globals.scss";
+import "@/styles/globals.scss";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import Header from "../comps/Header";
-import Warning from '../comps/Warning';
-import Router from '../comps/Router';
-import Footer from '../comps/Footer';
-import { getPersonnalInfo } from '../utils/functions';
-import { spinner } from '@nextui-org/react';
-
+import Header from "@/comps/Header";
+import Warning from '@/comps/Warning';
+import Router from '@/comps/Router';
+import Footer from '@/comps/Footer';
+import { getPersonnalInfo } from '@/utils/general';
 
 function MyApp({ Component, pageProps }) {
+  
   const [token, setToken] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState("");
-  const [sessionExpireAt, setSessionExpireAt] = useState(0);
-
   const [username, setUsername] = useState("");
 
   const router = useRouter();
@@ -32,7 +29,7 @@ function MyApp({ Component, pageProps }) {
     isShown: false
   });
 
-  const AuthContext = { token, isLoggedIn, pathname };
+  const authContext = { token, isLoggedIn };
 
   // Get name of user on token change into valid value (setup)
   useEffect(() => {
@@ -57,33 +54,28 @@ function MyApp({ Component, pageProps }) {
   }, [isLoggedIn])
 
 
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Restore session if refresh & loggedIn
     const RestoreSession = async () => {
-      const localExpirationTime = localStorage.getItem("sessionExpireAt")
       const localToken = localStorage.getItem("token");
-      if (localToken && localExpirationTime) {
-        const tokenStillValid = ((new Date).getTime() < localExpirationTime)
-        if (tokenStillValid) {
-          getPersonnalInfo(localToken, setUsername, true)
-            .then((isOk) => {
-              if (isOk) {
-                setToken(localToken)
-                setSessionExpireAt(localExpirationTime)
-                setIsLoggedIn(true)
-              } else {
-                setToken("expired")
-              }
-            })
+      if (localToken) {
+        getPersonnalInfo(localToken, setUsername, true)
+          .then((isOk) => {
+            if (isOk) {
+              setToken(localToken)
+              setIsLoggedIn(true)
+            } else {
+              setToken("expired")
+            }
+          })
 
-        }
       }
     }
     RestoreSession()
 
-    //Loader Animation
+    // Loading animation
     const handleStart = () => setLoading(true);
     const handleComplete = () => setLoading(false);
 
@@ -115,14 +107,13 @@ function MyApp({ Component, pageProps }) {
       );
       if (response.ok) {
         setIsLoggedIn(false)
-        setSessionExpireAt(null)
         setToken(null)
         localStorage.removeItem("token")
         localStorage.removeItem("sessionExpireAt")
         router.push("/")
         setWarning({
           message: reason ? reason : "See you soon !",  //dont show any sign of existing account !
-          type: reason ? "warning":"success",
+          type: reason ? "warning" : "success",
           isShown: true
         })
         return true;
@@ -137,21 +128,23 @@ function MyApp({ Component, pageProps }) {
     <>
       <Warning warning={warning} loading={loading} setWarning={setWarning} />
       {loading && Loader()}
-      <FullContext.Provider value={AuthContext}>
+      <AuthContext.Provider value={authContext}>
         <Header disconnect={disconnect} username={username} />
         {isLoggedIn && <Router currentPath={pathname} />}
-        <div style={{ minHeight: "100vh" }} className='d-flex flex-column justify-content-between'>
+        <div className='d-flex min-vh-100 flex-column justify-content-between'>
           <div>
-            <Component setToken={setToken} setWarning={setWarning} setSessionExpireAt={setSessionExpireAt} {...pageProps} />
+            <Component setToken={setToken} setWarning={setWarning} {...pageProps} />
           </div>
           <div>
             <Footer />
           </div>
         </div>
-      </FullContext.Provider>
+      </AuthContext.Provider>
     </>
   );
 }
+
+
 const Loader = () => {
   return (
     <div className=" d-flex justify-content-center align-items-center bg-light position-fixed vw-100" style={{ height: "calc(100vh - 80px)", bottom: "0", zIndex: "13" }}>
@@ -161,5 +154,5 @@ const Loader = () => {
 };
 
 
-export const FullContext = React.createContext({});
+export const AuthContext = React.createContext({});
 export default MyApp;

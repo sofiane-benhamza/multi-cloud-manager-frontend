@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
-import { FullContext } from '../_app';
-import { validateEmail, separation } from "../../utils/functions";
+import { AuthContext } from '../_app';
+import { Separation, validateEmail } from "@/utils/general";
 
 export default function Signup({setWarning}) {
     const router = useRouter();
@@ -62,12 +62,10 @@ export default function Signup({setWarning}) {
     };
 
     //redirect if user logged in
-    const { isLoggedIn } = useContext(FullContext);
+    const { isLoggedIn } = useContext(AuthContext);
 
     useEffect(()=>{
-        if(isLoggedIn){
-            router.push("/home");
-        }
+        isLoggedIn && router.push("/home");
     },[isLoggedIn])
 
     return (
@@ -173,7 +171,7 @@ export default function Signup({setWarning}) {
                                                     Sign&nbsp;up
                                                 </button>
                                             </div>
-                                            {separation("or continue with")}
+                                            <Separation desc="or continue with" />
                                             <br />
                                             <p className="btn btn-dark w-100"><i className="bi bi-github mr-3"></i>github</p>
                                             <p className="btn btn-light border border-dark w-100"><i className="bi bi-google mr-3"></i>google</p>

@@ -1,11 +1,11 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { useRouter } from "next/router";
-import { FullContext } from "../../../../_app";
-import { getCredentials, getVPCs, regions, separation } from "../../../../../utils/functions";
-import accSum from "add";
+import { AuthContext } from "@/pages/_app";
+import { getVPCs, regions } from "@/utils/aws";
+import { getCredentials, Separation } from "@/utils/general";
 
 export default function CreateSecurityGroup({ setWarning, setToken }) {
-    const { token } = useContext(FullContext);
+    const { token } = useContext(AuthContext);
     const router = useRouter();
 
     const [terminalOutput, setTerminalOutput] = useState("");
@@ -162,7 +162,7 @@ export default function CreateSecurityGroup({ setWarning, setToken }) {
 
 
             const response = await fetch(
-                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/terraform/aws/security_group/`,
+                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}terraform/aws/security_group/`,
                 {
                     method: "POST",
                     body: securityGroupConfig,
@@ -264,7 +264,6 @@ export default function CreateSecurityGroup({ setWarning, setToken }) {
         );
     };
 
-    //const [securityGroupCards, setSecurityGroupCards] = useState([securityGroupCard(0)]);
 
     const [securityGroupInboundCards, setSecurityGroupInboundCards] = useState([securityGroupCard("in", true)]);
     const [securityGroupOutboundCards, setSecurityGroupOutboundCards] = useState([securityGroupCard("out", false)]);
@@ -348,6 +347,7 @@ export default function CreateSecurityGroup({ setWarning, setToken }) {
                                             required
                                         > <option value="" defaultValue disabled>choose an existant account</option>
                                             {chooseFrom.accounts.map(name => (
+                                                name.startsWith("aws") &&
                                                 <option key={name} value={name}>{name}</option>
                                             ))}
                                         </select>
@@ -414,7 +414,7 @@ export default function CreateSecurityGroup({ setWarning, setToken }) {
                                             required
                                         />
                                         <br />
-                                        {separation("Inbound rules")}
+                                        <Separation desc="Inbound rules" />
                                         <div className="d-flex">
                                             <div className="col-2"> protocol </div>
                                             <div className="col-2"> port </div>
@@ -449,7 +449,7 @@ export default function CreateSecurityGroup({ setWarning, setToken }) {
                                             </button>
                                         </div>
                                         <br />
-                                        {separation("Outbound rules")}
+                                        <Separation desc="Outbound rules" />
                                         <input
                                             type="checkbox"
                                             style={{ color: "black" }} // Set color for the checkbox itself

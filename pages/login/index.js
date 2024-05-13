@@ -1,12 +1,12 @@
 import { useState, useContext, useEffect } from "react";
 import { useRouter } from "next/router";
-import { FullContext } from "../_app";
-import { separation, validateEmail } from "../../utils/functions";
+import { AuthContext } from "../_app";
+import { Separation, validateEmail } from "@/utils/general";
 
-export default function Login({ setToken, setWarning, setSessionExpireAt }) {
+export default function Login({ setToken, setWarning }) {
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
-    const { isLoggedIn } = useContext(FullContext);
+    const { isLoggedIn } = useContext(AuthContext);
     const router = useRouter();
 
     const handleInputChange = (e) => {
@@ -39,7 +39,7 @@ export default function Login({ setToken, setWarning, setSessionExpireAt }) {
             connectionForm.append("password", password);
 
             const response = await fetch(
-                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/users/`,
+                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}users/`,
                 {
                     method: "PATCH",
                     body: connectionForm,
@@ -57,8 +57,6 @@ export default function Login({ setToken, setWarning, setSessionExpireAt }) {
                 const expirationTime = new Date().getTime() + 600000; // Current time + 1 hour (in ms)
                 setToken(data.token);
                 localStorage.setItem("token",data.token)
-                setSessionExpireAt(expirationTime)
-                localStorage.setItem("sessionExpireAt",expirationTime)
             } else {
                 setWarning({
                     message: "please check your email and password",  //dont show any sign of existing account !
@@ -78,9 +76,7 @@ export default function Login({ setToken, setWarning, setSessionExpireAt }) {
     };
 
     useEffect(()=>{
-        if(isLoggedIn){
-            router.push("/home");
-        }
+        isLoggedIn && router.push("/home");
     },[isLoggedIn])
 
     return (
@@ -96,7 +92,7 @@ export default function Login({ setToken, setWarning, setSessionExpireAt }) {
                                         Let's Connect
                                     </h2>
                                     <form onSubmit={handleConnect} className="tilt-warp-title h6">
-                                        <label className="form-label mt-2 " htmlFor="email">
+                                        <label className="form-label mt-2" htmlFor="email">
                                             Email
                                         </label>
                                         <input
@@ -133,7 +129,7 @@ export default function Login({ setToken, setWarning, setSessionExpireAt }) {
                                         </div>
                                         <input type="checkbox" style={{ accentColor: "black" }} />&nbsp;&nbsp;&nbsp;Remember this device
                                         <p className="text-right mt-4"><span className="cursor-pointer hover-underline-black">Forgot password ?</span></p>
-                                        {separation("continue with")}
+                                        <Separation desc="continue with" />
                                         <p className="btn btn-dark w-100"><i className="bi bi-github mr-3"></i>github</p>
                                         <p className="btn btn-light border border-dark w-100"><i className="bi bi-google mr-3"></i>google</p>
                                     </form>

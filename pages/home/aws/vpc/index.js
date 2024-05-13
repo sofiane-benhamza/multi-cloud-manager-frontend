@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
-import { FullContext } from "../../../_app";
-import { getCredentials, getVPCs, regions, wait } from "../../../../utils/functions";
+import { AuthContext } from "@/pages/_app";
+import { getVPCs, regions } from "@/utils/aws";
+import { getCredentials, wait } from "@/utils/general";
 
 export default function VPC({ setWarning, setToken }) {
-    const { isConnected, token } = useContext(FullContext);
+    const { isConnected, token } = useContext(AuthContext);
     const router = useRouter();
 
     // State for filter and vpcs
@@ -98,6 +99,7 @@ export default function VPC({ setWarning, setToken }) {
                                     >
                                         <option value="" disabled>Choose an account</option>
                                         {filter.accounts.map(name => (
+                                            name.startsWith("aws") &&
                                             <option key={name} value={name}>{name}</option>
                                         ))}
                                     </select>

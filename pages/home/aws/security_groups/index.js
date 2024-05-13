@@ -1,10 +1,11 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
-import { FullContext } from "../../../_app";
-import { getCredentials, getSecurityGroups, regions, wait } from "../../../../utils/functions";
+import { AuthContext } from "@/pages/_app";
+import { getSecurityGroups, regions } from "@/utils/aws";
+import { getCredentials, wait } from "@/utils/general";
 
 export default function SecurityGroup({ setWarning, setToken }) {
-    const { token } = useContext(FullContext);
+    const { token } = useContext(AuthContext);
     const router = useRouter();
 
 
@@ -57,7 +58,7 @@ export default function SecurityGroup({ setWarning, setToken }) {
 
         try {
             const response = await fetch(
-                `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/aws/security_group/?` +
+                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/security_group/?` +
                 new URLSearchParams({
                     token: token,
                     region: filter.region,
@@ -107,6 +108,7 @@ export default function SecurityGroup({ setWarning, setToken }) {
                                     >
                                         <option value="" disabled>Choose an account</option>
                                         {filter.accounts.map(name => (
+                                            name.startsWith("aws") &&
                                             <option key={name} value={name}>{name}</option>
                                         ))}
                                     </select>

@@ -1,4 +1,4 @@
-async function getVMs(token, account, region, setResult) {
+async function getVMs(token, account, location, setResult) {
     if (!token)
         return false
     try {
@@ -6,7 +6,7 @@ async function getVMs(token, account, region, setResult) {
             `${process.env.NEXT_PUBLIC_BACKEND_ADDR}azure/vms/?` + new URLSearchParams({
                 token: token,
                 account: account,
-                region: region
+                location: location
             }), {
             method: 'GET'
         });
@@ -29,27 +29,40 @@ async function getVMs(token, account, region, setResult) {
     }
 };
 
-async function getResourceGroups(token, account, region, setResult) {
+async function getResourceGroups(token, account, location, setResult, getFullResourceGroups) { //to get all the rgs info for displaying
     if (!token)
         return false
     try {
+        let params = new URLSearchParams({
+            token: token,
+            account: account,
+            location: location,
+
+        })
+        getFullResourceGroups && params.append("getFullResourceGroups", "true");
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}azure/resource_groups/?` + new URLSearchParams({
-                token: token,
-                account: account,
-                region: region
-            }), {
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}azure/resource_groups/?` + params, {
             method: 'GET'
         });
 
         if (response.ok) {
             let data = await response.json();
-            if (data.length == 0)
-                data = ["there is no resource groups"]
-            setResult((prevState) => ({
-                ...prevState,
-                resourceGroups: data,
-            }))
+            if (getFullResourceGroups) {
+                if (data.length == 0)
+                    data = [{ id: "there is no resource groups", rgName: "-", managedBy: "-" }]
+                setResult(prev => ({
+                    ...prev,
+                    resourceGroups: data
+                }))
+
+            } else {
+                if (data.length == 0)
+                    data = ["there is no resource groups"]
+                setResult((prevState) => ({
+                    ...prevState,
+                    resourceGroups: data,
+                }))
+            }
             return true
         }
         return false
@@ -59,16 +72,17 @@ async function getResourceGroups(token, account, region, setResult) {
     }
 };
 
-async function getVNs(token, account, region, resourceGroup, setResult) {
+async function getVNs(token, account, location, setResult, resourceGroup) {
     if (!token)
         return false
+    let rg = "";
+    if (resourceGroup) rg = `resourceGroup=${resourceGroup}&`;
     try {
         const response = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}azure/vns/?` + new URLSearchParams({
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}azure/vns/?` + rg + new URLSearchParams({
                 token: token,
                 account: account,
-                region: region,
-                resourceGroup: resourceGroup,
+                location: location
             }), {
             method: 'GET'
         });
@@ -77,7 +91,7 @@ async function getVNs(token, account, region, resourceGroup, setResult) {
             let data = await response.json();
             console.log(data)
             if (data.length == 0)
-                data = [{ name: "there is no virtual networks", mask: "-", cidrBlock: "-" }]
+                data = [{ name: "there is no virtual networks", mask: "-", cidrBlock: "-", id: "-", resourceGroup: "-" }]
             setResult((prevState) => ({
                 ...prevState,
                 vns: data,
@@ -91,7 +105,7 @@ async function getVNs(token, account, region, resourceGroup, setResult) {
     }
 };
 
-async function getSubnets(token, account, virtualNetworkName, resourceGroup, setResult) {
+async function getSubnets(token, account, virtualNetworkName, setResult, resourceGroup) {
     if (!token)
         return false
     try {
@@ -182,9 +196,65 @@ async function getSSHKeys(token, account, resourceGroup, setResult) {
     }
 }
 
+async function getSQLs(token, account, location, setResult) {
+    if (!token)
+        return false
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}azure/sqls/?` + new URLSearchParams({
+                token: token,
+                account: account,
+                location: location
+            }), {
+            method: 'GET'
+        });
 
+        if (response.ok) {
+            let data = await response.json();
+            if (data.length == 0)
+                data = [{ resourceGroup: "there is no SQL databases", id: "-", dbName: "-", serverName: "-", type: "-", status: "-" }]
+            setResult((prevState) => ({
+                ...prevState,
+                sqls: data,
+            }))
+            return true
+        }
+        return false
+    } catch (error) {
+        console.error("something went wrong");
+        return false
+    }
+};
 
+async function getWebApps(token, account, location, setResult) {
+    if (!token)
+        return false
+    try {
+        const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_ADDR}azure/web_apps/?` + new URLSearchParams({
+                token: token,
+                account: account,
+                location: location
+            }), {
+            method: 'GET'
+        });
 
+        if (response.ok) {
+            let data = await response.json();
+            if (data.length == 0)
+                data = [{ resourceGroup: "there is no static web apps", id: "-", name: "-", hostname: "-", repository: "-"}]
+            setResult((prevState) => ({
+                ...prevState,
+                webApps: data,
+            }))
+            return true
+        }
+        return false
+    } catch (error) {
+        console.error("something went wrong");
+        return false
+    }
+};
 
 
 const locations = [
@@ -202,21 +272,21 @@ const locations = [
     "brazilsoutheast",
     "northeurope",
     "westeurope",
-    "uksouth",
-    "ukwest",
-    "francecentral",
-    "francesouth",
-    "germanynorth",
-    "germanywestcentral",
-    "germanycentral",
-    "norwayeast",
-    "norwaywest",
-    "switzerlandnorth",
-    "switzerlandwest",
-    "uaenorth",
-    "uaecentral",
-    "southafricanorth",
-    "southafricawest",
+    // "uksouth",
+    // "ukwest",
+    // "francecentral",
+    // "francesouth",
+    // "germanynorth",
+    // "germanywestcentral",
+    // "germanycentral",
+    // "norwayeast",
+    // "norwaywest",
+    // "switzerlandnorth",
+    // "switzerlandwest",
+    // "uaenorth",
+    // "uaecentral",
+    // "southafricanorth",
+    // "southafricawest",
 
 ];
 
@@ -260,4 +330,4 @@ const sizes = [
 ]
 
 
-export { locations, sizes, getVMs, getResourceGroups, getVNs, getSubnets, getSecurityGroups, getSSHKeys }
+export { locations, sizes, getVMs, getResourceGroups, getVNs, getSubnets, getSecurityGroups, getSSHKeys, getSQLs, getWebApps }

@@ -45,7 +45,7 @@ export default function ProfileCredentials({ setWarning }) {
                     <CardHeader className="justify-between">
                         <div className="d-flex flex-row justify-content-left align-items-center gap-5">
                             <div>
-                                <img className="bg-light p-2" width="40px" height="35px" src={srcOfLogo} alt="Logo" />
+                                <img   className="bg-light p-2" width="40px" height="35px" src={srcOfLogo} alt="Logo" />
                             </div>
                             <div className="ml-3 m-0 d-flex flex-row align-items-center">
                                 <div className="font-semibold leading-none font-weight-bolder baloo-da-beautiful">Amazon Web Services</div>
@@ -90,7 +90,7 @@ export default function ProfileCredentials({ setWarning }) {
                     <CardHeader className="justify-between">
                         <div className="d-flex flex-row justify-content-left align-items-center gap-5">
                             <div>
-                                <img className="bg-light p-2" width="40px" height="35px" src={srcOfLogo} alt="Logo" />
+                                <img   className="bg-light p-2" width="40px" height="35px" src={srcOfLogo} alt="Logo" />
                             </div>
                             <div className="ml-3 m-0 d-flex flex-row align-items-center">
                                 <div className="font-semibold leading-none font-weight-bolder baloo-da-beautiful">Microsoft Azure</div>
@@ -442,29 +442,29 @@ export default function ProfileCredentials({ setWarning }) {
             <ProfileNavbar />
             <div className="d-flex row w-100 justify-content-center text-dark m-auto tilt-warp-title">
                 <div className="d-grid row w-100 col-xl-10 col-lg-10 col-md-11 col-sm-12 col-xs-12 text-dark justify-content-start">
-                    {accounts.aws[0].id &&
-                        accounts.aws.map((account, index) => (
-                            <AWSCredentialCard
-                                key={index} // Assuming index is a suitable key
-                                cloud={account.cloud}
-                                id={account.id}
-                                accessKeyId={account.accessKeyId}
-                                secretAccessKey={account.secretAccessKey}
-                            />
-                        ))}
+                    {accounts.aws.map((account, index) => (
+                        account.id &&
+                        <AWSCredentialCard
+                            key={index} // Assuming index is a suitable key
+                            cloud={account.cloud}
+                            id={account.id}
+                            accessKeyId={account.accessKeyId}
+                            secretAccessKey={account.secretAccessKey}
+                        />
+                    ))}
                 </div>
                 <div className="d-grid row w-100 col-xl-10 col-lg-10 col-md-11 col-sm-12 col-xs-12 text-dark justify-content-start">
-                    {accounts.azure[0].id
-                        && accounts.azure.map((account, index) => (
-                            <AZURECredentialCard
-                                key={index} // Assuming index is a suitable key
-                                id={account.id}
-                                subscriptionId={account.subscriptionId}
-                                clientId={account.clientId}
-                                clientSecret={account.clientSecret}
-                                tenantId={account.tenantId}
-                            />
-                        ))}
+                    {accounts.azure.map((account, index) => (
+                        account.id &&
+                        <AZURECredentialCard
+                            key={index} // Assuming index is a suitable key
+                            id={account.id}
+                            subscriptionId={account.subscriptionId}
+                            clientId={account.clientId}
+                            clientSecret={account.clientSecret}
+                            tenantId={account.tenantId}
+                        />
+                    ))}
                     <AddCredentialCard />
                 </div>
             </div>

@@ -1,10 +1,14 @@
 "use client";
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import Slider from "@/comps/Slider";
+import Slider from "@/comps/static/Slider";
 import Typewriter from 'typewriter-effect';
 import { useEffect, useContext } from 'react';
 import { AuthContext } from "./_app";
+import Services from '@/comps/static/Services';
+import AboutUs from '@/comps/static/AboutUs';
+import Features from '@/comps/static/Features';
+import MidHeader from '@/comps/static/MidHeader';
 
 export default function Home() {
 
@@ -29,9 +33,11 @@ export default function Home() {
         <title>Matious Cloud Provider Manager</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
+      <MidHeader />
+      <Services />
+      <br />
       <section className='tilt-warp-title'>
-        <div className="container">
+        <div className="container" id="services">
           <div className="row text-dark">
             <div className="col text-center mt-5 mb-5">
               <h2 className='textsmall'>Managing</h2>
@@ -48,15 +54,17 @@ export default function Home() {
 
           </div>
         </div>
+        <Features />
         <TypewriterCard />
-        <hr />
+        <AboutUs />
         <div className='d-flex flex-wrap container py-5'>
           {services.map((service, index) => (
             <Service key={index} theme={service.theme} title={service.title} comment={service.comment} desc={service.desc} />
           ))}
         </div>
-
-        <div className="text-dark d-flex container justify-content-center overflow-hidden">
+      </section>
+      <section className='tilt-warp-title bg-pale'>
+        <div className="text-dark d-flex container justify-content-center overflow-hidden ">
           <div className="col text-center my-5 mx-3 py-5 border border-dark rounded-10 background">
             <span className='star' />
             <span className='star' />
@@ -77,6 +85,14 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <div className="bg-primary my-0 text-light h4" id="footer">
+      <div className="container py-2 d-flex align-items-center">
+        <p className="mb-0 d-flex h6 align-items-center">
+          Are you looking for a consultant for your Business
+          <button className="btn btn-light ml-3">Contact Us</button>
+        </p>
+      </div>
+    </div>
 
     </>
   )

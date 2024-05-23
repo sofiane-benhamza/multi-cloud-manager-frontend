@@ -80,7 +80,7 @@ export default function Login({ setToken, setWarning }) {
     },[isLoggedIn])
 
     return (
-        <div className="d-flex justify-content-center mt-5">
+        <div className="d-flex justify-content-center mt-5 mb-5">
             <div className="d-flex justify-content-center align-items-center">
                 <div className="col-12 border border-dark rounded mt-3">
                     <div className="bg-transparent text-dark rounded">
@@ -100,7 +100,7 @@ export default function Login({ setToken, setWarning }) {
                                             id="email"
                                             name="email"
                                             value={email}
-                                            minLength={10}
+                                            pattern="/^((?!\.)[\w-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/gim;"
                                             className="form-control mb-4"
                                             onChange={handleInputChange}
                                             required

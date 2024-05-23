@@ -12,6 +12,10 @@ body {
   --blue-beach: #2036A1;
 }
 
+@import "@/public/assets/css/style.css";
+
+
+
 @import "loader.scss";
 @import "fonts.scss";
 @import "slider.scss";
@@ -30,10 +34,11 @@ a {
 
 .down-to-up {
   transition: all .3s ease;
-&:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 0 8px var(--blue-beach);
-}
+
+  &:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 0 8px var(--blue-beach);
+  }
 }
 
 .custom-dark-button {
@@ -139,14 +144,15 @@ a {
 }
 
 
-button[disabled]{
-    cursor: not-allowed;
-}
-input[type="checkbox"]{
-  cursor:pointer;
+button[disabled] {
+  cursor: not-allowed;
 }
 
-.text-underline{
+input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.text-underline {
   text-decoration: underline;
 }
 
@@ -158,3 +164,31 @@ input[type="checkbox"]{
   background-image: linear-gradient(90deg, var(--blue-ocean), var(--blue-beach));
 }
 
+.tags-inverse-hover:hover {
+  cursor: pointer;
+  background-color: white;
+  color: black;
+}
+
+.back-to-top {
+  position: fixed;
+  display: none;
+  right: 30px;
+  bottom: 30px;
+  z-index: 11;
+}
+
+.bg-pale {
+  background-color: #F3F4F8;
+}
+
+.min-xh-100 {
+  min-height: calc(100vh - 120px);
+}
+
+.main-home-element {
+  display: flex;
+  align-items: center;
+  min-height: calc(100vh - 120px);
+
+}

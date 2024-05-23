@@ -1,4 +1,6 @@
 async function getCredentials(token, setChooseFrom, getFullCredentials) {
+    if (!token || token == "expired")
+        return false
     try {
         const response = await fetch(
             `${process.env.NEXT_PUBLIC_BACKEND_ADDR}cloud/?token=${token}`,
@@ -109,11 +111,10 @@ function validateIPAddress(ipAddress) {
     return (false)
 }
 
-
 function Separation({ desc, title }) {
     return (
         <>
-            <div className="d-flex my-3 flex-row align-items-center">
+            <div className="d-flex my-3 w-100  flex-row justify-content-between align-items-center">
                 <hr className="w-25 border border-dark" />
                 <p className="h6 text-center"> {desc} </p>
                 {title && <i title={title} className="mx-2 bi bi-question-circle-fill cursor-pointer"></i>}
@@ -124,7 +125,7 @@ function Separation({ desc, title }) {
     )
 }
 
-  
+
 const wait = <div className="spinner-border text-primary" role="status">   <span className="sr-only"></span> </div>
 
 export { getCredentials, getPersonnalInfo, validateIPAddress, Separation, valideGithubRepository, validateEmail, wait };

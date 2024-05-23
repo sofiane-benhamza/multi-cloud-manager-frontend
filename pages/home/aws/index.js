@@ -20,7 +20,7 @@ export default function AWS() {
 
     return (<>
         <p className="tilt-warp-title text-center m-5 h3 text-dark">Choose Your Service</p>
-        <div className="d-flex row w-100 justify-content-center text-dark">
+        <div className="d-flex row w-100 justify-content-center mx-auto text-dark">
               {awsServices.map((service, index) => (
                 <AwsService key={index} name={service.name} link={service.link} logoUrl={service.logoUrl} /> 
               ))}
@@ -39,7 +39,7 @@ const AwsService = ({ name, logoUrl, link }) => {
                 <CardHeader className="justify-between">
                     <div className="d-flex text-dark font-weight-bold flex-row justify-content-left align-items-center gap-5">
                         <div>
-                            <img className="rounded p-1" width="40px" height="35px" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/1024px-Amazon_Web_Services_Logo.svg.png" />
+                            <img   className="rounded p-1" width="40px" height="35px" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/1024px-Amazon_Web_Services_Logo.svg.png" />
                         </div>
                         <div className="ml-3 m-0">
                             <p className="tilt-warp-title h5">{name}</p>

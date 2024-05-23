@@ -111,7 +111,7 @@ async function getSecurityGroups(token, region, account, setChooseFrom) {
     }
 }
 
-async function getSSHKeys(token, account, setChooseFrom) {
+async function getSSHKeys(token, account, region, setChooseFrom) {
     if (!token)
         return false
     try {
@@ -119,7 +119,8 @@ async function getSSHKeys(token, account, setChooseFrom) {
             `${process.env.NEXT_PUBLIC_BACKEND_ADDR}aws/ssh_keys/?` +
             new URLSearchParams({
                 token: token,
-                uniqueName: account
+                account: account,
+                region: region
             }),
             {
                 method: "GET",

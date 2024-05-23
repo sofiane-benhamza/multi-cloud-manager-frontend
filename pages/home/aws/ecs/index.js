@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/router";
 import { AuthContext } from "@/pages/_app";
-import {  getECSs, regions } from "@/utils/aws";
+import { getECSs, regions } from "@/utils/aws";
 import { getCredentials, wait } from "@/utils/general";
 
 export default function ECS({ setWarning, setToken }) {
@@ -89,14 +89,14 @@ export default function ECS({ setWarning, setToken }) {
                 <div className="col-md-8">
                     <div className="card">
                         <div className="card-body">
-                            <div className="row mb-3">
-                                <div className="col-md-4">
+                            <div className="d-flex flex-row mb-4">
+                                <div className="col-lg-3 col-md-4 col-sm-5">
                                     <label htmlFor="account" className="form-label">Account</label><br />
                                     <select
                                         id="account"
                                         name="account"
                                         value={filter.account}
-                                        className="form-select w-50 bg-light border-0"
+                                        className="form-select bg-light border-0"
                                         onChange={handleInputChange}
                                     >
                                         <option value="" disabled>Choose an account</option>
@@ -106,13 +106,13 @@ export default function ECS({ setWarning, setToken }) {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="col-md-4">
+                                <div className="col-md-4 col-sm-5">
                                     <label htmlFor="region" className="form-label">Region</label><br />
                                     <select
                                         id="region"
                                         name="region"
                                         value={filter.region}
-                                        className="form-select w-50 bg-light border-0"
+                                        className="form-select bg-light border-0"
                                         onChange={handleInputChange}
                                     >
                                         <option value="" disabled>Choose a region</option>
@@ -137,7 +137,7 @@ export default function ECS({ setWarning, setToken }) {
                                             <th className="text-center">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody>  
+                                    <tbody>
                                         {filter.clusters.length > 0 ? filter.clusters.map((cluster, index) => (
                                             <tr key={index}>
                                                 <td className="text-center">{cluster.clusterName}</td>
@@ -155,8 +155,8 @@ export default function ECS({ setWarning, setToken }) {
                                                     <p key={index}>
                                                         {containerInstance}
                                                     </p>))
-                                                    }
-                                                    </td>
+                                                }
+                                                </td>
 
                                                 <td className="text-center">
                                                     <button className="btn mx-1 btn-danger" title="Terminate" disabled={cluster.clusterName != ""} onClick={() => { deleteCluster(cluster.clusterName) }}>

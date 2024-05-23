@@ -4,6 +4,8 @@ import {  getVPCs, getSubnets, getSecurityGroups, getSSHKeys, sizes, regions } f
 import { getCredentials, Separation } from "@/utils/general";
 import Downloader from "@/comps/Downloader";
 
+
+
 export default function CreateEC2({ setWarning, setToken }) {
     const { token } = useContext(AuthContext);
 
@@ -85,7 +87,6 @@ export default function CreateEC2({ setWarning, setToken }) {
                     ...prevConfig,
                     region: false
                 }));
-                getSSHKeys(token, value, setChooseFrom);
                 break;
             case "region":
                 setDisabled(prevConfig => ({
@@ -94,6 +95,7 @@ export default function CreateEC2({ setWarning, setToken }) {
                 }));
                 getVPCs(token, value, eC2.account, setChooseFrom); //fetch all vPCs inside region from backend
                 getSecurityGroups(token, value, eC2.account, setChooseFrom); //fetch all sgs inside region from backend
+                getSSHKeys(token, eC2.account, value, setChooseFrom);
                 break;
             case "vPC":
                 setDisabled(prevConfig => ({

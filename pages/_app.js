@@ -7,7 +7,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import Header from "@/comps/Header";
 import Warning from '@/comps/Warning';
 import Router from '@/comps/Router';
-import Footer from '@/comps/Footer';
+import Footer from '@/comps/static/Footer';
 import { getPersonnalInfo } from '@/utils/general';
 
 function MyApp({ Component, pageProps }) {
@@ -96,7 +96,7 @@ function MyApp({ Component, pageProps }) {
     try {
       //delete token from server
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}:8000/users/?` +
+        `${process.env.NEXT_PUBLIC_BACKEND_ADDR}users/?` +
         new URLSearchParams({
           token: token,
           logout: true
@@ -110,12 +110,12 @@ function MyApp({ Component, pageProps }) {
         setToken(null)
         localStorage.removeItem("token")
         localStorage.removeItem("sessionExpireAt")
-        router.push("/")
         setWarning({
           message: reason ? reason : "See you soon !",  //dont show any sign of existing account !
           type: reason ? "warning" : "success",
           isShown: true
         })
+        router.push("/")
         return true;
       }
     } catch (err) {

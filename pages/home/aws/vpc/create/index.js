@@ -116,7 +116,7 @@ export default function CreateVPC({ setWarning, setToken }) {
             }
             vPCConfiguration.append("cIDRBlock", vPC.networkAddress + "/" + vPC.mask)
             const response = await fetch(
-                "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/terraform/aws/vpc/",
+                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}terraform/aws/vpc/`,
                 {
                     method: "POST",
                     body: vPCConfiguration,

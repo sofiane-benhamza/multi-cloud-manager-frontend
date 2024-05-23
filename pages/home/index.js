@@ -9,12 +9,13 @@ export default function Home() {
 
     const cloudProviders = [{ name: "Amazon Web Services", label: "The Leader  of  Cloud  Providers", numberOfServices: "12", link: "aws", srcOfLogo: "https://wiseit.com.ua/wp-content/uploads/2022/09/media_1649ebc3fbbce0df508081913819d491fc3f7c7a9.png" },
     { name: "Google Cloud Platform", label: "Master Search Engine Founder", numberOfServices: "5", link: "gcp", srcOfLogo: "https://webizona.com/wp-content/uploads/2024/02/Group-5511.svg" },
-    { name: "Microsoft Azure", label: "Creator of Microsoft Windows", numberOfServices: "5", link: "azure", srcOfLogo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwyIXFUIHawuZxZWJrdQnnCRsmIJ7IvrRUJw&usqp=CAU" }
+    { name: "Microsoft Azure", label: "Creator of Microsoft Windows", numberOfServices: "5", link: "azure", srcOfLogo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwyIXFUIHawuZxZWJrdQnnCRsmIJ7IvrRUJw&usqp=CAU" },
+    { name: "Github actions",label: "Git-native CI/CD", lumberOfServices: "2",link:"github_actions", srcOfLogo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtLtcGkd8KLeXVb40G-CNAisG8iMqIQmB57vVSsoOyDA&s" }
     ]
 
     return (
         <>
-            <p className="tilt-warp-title text-center my-5 h2 text-dark">Chooe Your Cloud Provider</p>
+            <p className="tilt-warp-title text-center my-5 h2 text-dark">Chooe Your Provider</p>
             <div className="d-flex flex-wrap w-100 justify-content-center text-dark my-5">
                 {cloudProviders.map((cloudProvider, index) =>
                     <CloudProviderCard key={index} name={cloudProvider.name} label={cloudProvider.label} numberOfServices={cloudProvider.numberOfServices} link={cloudProvider.link} srcOfLogo={cloudProvider.srcOfLogo} />

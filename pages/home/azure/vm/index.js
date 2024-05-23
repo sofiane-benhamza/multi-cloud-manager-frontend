@@ -46,6 +46,13 @@ export default function VM({ setWarning, setToken }) {
 
     //handle actions
     const handleVMAction = async (action, vmName, resourceGroup) => {
+
+        setWarning({
+            message: `We will let you know when its done.`,
+            type: "immediate",
+            isShown: true
+        })
+
         const actionConfig = new FormData();
 
         actionConfig.append("token", token);
@@ -95,14 +102,14 @@ export default function VM({ setWarning, setToken }) {
                 <div className="col-md-8">
                     <div className="card">
                         <div className="card-body">
-                            <div className="row mb-3">
-                                <div className="col-md-4">
+                            <div className="d-flex flex-row mb-4">
+                                <div className="col-lg-3 col-md-4 col-sm-5">
                                     <label htmlFor="account" className="form-label">Account</label><br />
                                     <select
                                         id="account"
                                         name="account"
                                         value={filter.account}
-                                        className="form-select w-50 bg-light border-0"
+                                        className="form-select bg-light border-0"
                                         onChange={handleInputChange}
                                     >
                                         <option value="" disabled>Choose an account</option>
@@ -112,13 +119,13 @@ export default function VM({ setWarning, setToken }) {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="col-md-4">
-                                    <label htmlFor="location" className="form-label">Location</label><br />
+                                <div className="col-md-4 col-sm-5">
+                                    <label htmlFor="location" className="form-label">location</label><br />
                                     <select
                                         id="location"
                                         name="location"
                                         value={filter.location}
-                                        className="form-select w-50 bg-light border-0"
+                                        className="form-select bg-light border-0"
                                         onChange={handleInputChange}
                                     >
                                         <option value="" disabled>Choose a location</option>

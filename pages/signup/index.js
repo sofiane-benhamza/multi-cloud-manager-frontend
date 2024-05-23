@@ -34,7 +34,7 @@ export default function Signup({setWarning}) {
                 signUpForm.append(key, value);
             }
             const response = await fetch(
-                "http://" + process.env.NEXT_PUBLIC_BACKEND_IP_ADDR + ":8000/users/",
+                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}users/`,
                 {
                     method: "POST",
                     body: signUpForm,
@@ -127,7 +127,7 @@ export default function Signup({setWarning}) {
                                                 id="email"
                                                 name="email"
                                                 placeholder="johndoe@example.com"
-                                                minLength="8"
+                                                pattern="/^((?!\.)[\w-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$/gim;"
                                                 value={personnalInfo.email}
                                                 className="form-control"
                                                 onChange={handleInputChange}
@@ -141,7 +141,8 @@ export default function Signup({setWarning}) {
                                                 id="password"
                                                 name="password"
                                                 placeholder="my-pa$$w0rd"
-                                                minLength="8"
+                                                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$"
+                                                title="Minimum eight characters, at least one uppercase letter, one lowercase letter and one number"
                                                 value={personnalInfo.password}
                                                 className="form-control"
                                                 onChange={handleInputChange}

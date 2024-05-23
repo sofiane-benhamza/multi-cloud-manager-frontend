@@ -7,20 +7,22 @@ export default function azure() {
 
     const azureServices = [
         { name: "Virtual Machines", link: "vm", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT93J5ffCEgZfd-B-ftT6tI8iXXq7gvMqXipmtqhRlQYA&s" },
-        { name: "Azure DevOps", link: "", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3VTETtYMR778DN8zcWxWHBIqgYHp2k0tqfukrpxuDJg&s" },
-        { name: "Web App", link: "", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTR0_YrITSMkpfxE2DTrbLk2KpChqgKhGoK18B2kfo0aQ&s" },
+        { name: "Resource Groups", link: "rg", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSeTkbWN7ZaVIBgjtTkUsyOnKUNApNCQ0C3k-xSLuRIEw&s" },
+        { name: "Virtual Networks", link: "vn", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSj9aP5wtrWa0O3TmCt79gepiiuXBGZFJMUSfhMUaQHwQ&s" },
+        { name: "Static Web App", link: "static_web_app", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTR0_YrITSMkpfxE2DTrbLk2KpChqgKhGoK18B2kfo0aQ&s" },
         { name: "Files", link: "", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQgdZVYUFOAzwO_dpemIgIbVSlWr3QJrYZXECBun4zMu5_LQi__JsJm4E8fJSzk1LSQjXg&usqp=CAU" },
         { name: "Database for PostgreSQL", link: "", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFwoZHA1OBt-zd1K00RqqT0g8BFvFC65_Kl6izYyfpCQ&s" },
-        { name: "SQL database", link: "", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSc_64CjOyGJLsCuHz5JPVGqo_OceWn5GjngCP5hIY79Q&s" },
+        { name: "SQL database", link: "sql", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSc_64CjOyGJLsCuHz5JPVGqo_OceWn5GjngCP5hIY79Q&s" },
         { name: "Database for MySQL", link: "", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR46UFpSVTXzgTSzFtKRIOJM9YwEiC3AzCckdKwjFL3WQ&s" },
         { name: "Azure Cosmos DB", link: "", logoUrl: "https://logowik.com/content/uploads/images/azure-cosmos-db7049.jpg" },
+        
 
     ]
 
 
     return (<>
         <p className="tilt-warp-title text-center m-5 h3 text-dark">Choose Your Service</p>
-        <div className="d-flex row w-100 justify-content-center text-dark">
+        <div className="d-flex row w-100 justify-content-center mx-auto text-dark">
             {azureServices.map((service, index) => (
                 <AzureService key={index} name={service.name} link={service.link} logoUrl={service.logoUrl} />
             ))}
@@ -39,7 +41,7 @@ const AzureService = ({ name, logoUrl, link }) => {
                 <CardHeader className="justify-between">
                     <div className="d-flex text-dark font-weight-bold flex-row justify-content-left align-items-center gap-5">
                         <div>
-                            <img className="rounded p-1" width="40px" height="35px" src="https://static-00.iconduck.com/assets.00/microsoft-azure-icon-512x396-6fn0yfat.png" />
+                            <img   className="rounded p-1" width="40px" height="35px" src="https://static-00.iconduck.com/assets.00/microsoft-azure-icon-512x396-6fn0yfat.png" />
                         </div>
                         <div className="ml-3 m-0">
                             <p className="tilt-warp-title h5">{name}</p>

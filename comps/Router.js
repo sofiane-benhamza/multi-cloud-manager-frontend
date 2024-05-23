@@ -21,7 +21,7 @@ function Router({ currentPath }) {
             <i className="ml-3 bi bi-router-fill"></i>
             {pathSegments.map((segment, index) => (
                 <React.Fragment key={index}>
-                    <span className="mx-3" onClick={() => setRoute(index)} style={{ cursor: 'pointer' }}>{segment.replace("_"," ")}</span>&nbsp;
+                    <span className="mx-3" onClick={() => setRoute(index)} style={{ cursor: 'pointer' }}>{segment.replaceAll("_"," ")}</span>&nbsp;
                     {index !== pathSegments.length - 1 && <span className="ml-1">{<i className="bi bi-caret-right-fill" />}</span>}
                 </React.Fragment>
             ))}

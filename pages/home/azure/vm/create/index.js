@@ -21,6 +21,8 @@ export default function CreateVM({ setWarning, setToken }) {
             securityGroup: "",
             vmSize: "",
             serverName: "",
+            osDiskName: "",
+            osDiskSize: "",
             adminUsername: "",
             adminPassword: "",
             toInstall: "",
@@ -39,6 +41,8 @@ export default function CreateVM({ setWarning, setToken }) {
             securityGroup: true,
             vmSize: true,
             serverName: true,
+            osDiskName: true,
+            osDiskSize: true,
             toInstall: true,
             adminUsername: true,
             adminPassword: true
@@ -104,10 +108,10 @@ export default function CreateVM({ setWarning, setToken }) {
                 getResourceGroups(token, vm.account, value, setChooseFrom) // Value = vm.location
                 break;
             case "resourceGroup":
-                getVNs(token, vm.account, vm.region, value, setChooseFrom)  // Value = vm.resourceGroup
+                getVNs(token, vm.account, vm.location, setChooseFrom, value)  // Value = vm.resourceGroup
                 break;
             case "vn":
-                getSubnets(token, vm.account, value, vm.resourceGroup, setChooseFrom);  // Value == vm.virtualNetwork == vn
+                getSubnets(token, vm.account, value, setChooseFrom, vm.resourceGroup);  // Value == vm.virtualNetwork == vn
                 getSecurityGroups(token, vm.account, vm.resourceGroup, setChooseFrom);
                 break;
             case "securityGroup":
@@ -125,11 +129,9 @@ export default function CreateVM({ setWarning, setToken }) {
     const handleCreateVM = async (e) => {
         e.preventDefault();
         setTerminalOutput({ terraform: false, ssh: "" });
-        console.log(vm)
-        return
         setCreateButtonContent(<span><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> please wait</span>);
 
-        let SSHKeyIsUnique = !chooseFrom.sshKeys.includes(newSSHKeyName);  // Same key name at aws will failed, checked here
+        const SSHKeyIsUnique = !chooseFrom.sshKeys.includes(newSSHKeyName);  // Same key name at aws will failed, checked here
         if (!SSHKeyIsUnique) {
             setWarning({
                 message: "SSH key name already exists, please choose another key name",
@@ -145,16 +147,16 @@ export default function CreateVM({ setWarning, setToken }) {
 
             const notToBeSent = ["existentSSHKeyName", "newSSHKeyName", "createNewSSHKey"];
 
-            for (const key in VM) {
+            for (const key in vm) {
                 if (vm.hasOwnProperty(key) && !notToBeSent.includes(key)) {
-                    VMConfiguration.append(key, VM[key]);
+                    VMConfiguration.append(key, vm[key]);
                 }
             }
 
             vm.createNewSSHKey ? VMConfiguration.append("newSSHKeyName", vm.newSSHKeyName) : VMConfiguration.append("existentSSHKeyName", vm.existentSSHKeyName);//append here if create or choose
 
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}terraform/aws/vm/`,
+                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}terraform/azure/vm/`,
                 {
                     method: "POST",
                     body: VMConfiguration,
@@ -164,7 +166,7 @@ export default function CreateVM({ setWarning, setToken }) {
             const data = await response.json();
             if (response.ok) {
                 setWarning({
-                    message: "Your EC2 has been created successfully",
+                    message: "Your virtual machine has been created successfully",
                     type: "success",
                     isShown: true
                 });
@@ -216,6 +218,7 @@ export default function CreateVM({ setWarning, setToken }) {
                                                         setDisabled(INIT.DISABLED);
                                                         setChooseFrom((prev) => ({
                                                             accounts: prev.accounts,
+                                                            resourceGroups: [],
                                                             vns: [],
                                                             subnets: [],
                                                             securityGroups: [],
@@ -459,6 +462,40 @@ export default function CreateVM({ setWarning, setToken }) {
                                             required
                                         />
                                         <br />
+
+                                        <label className="form-label">
+                                            OS disk  name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="osDiskName"
+                                            disabled={disabled.osDiskName}
+                                            value={vm.osDiskName}
+                                            name="osDiskName"
+                                            placeholder="web-server-storage"
+                                            className="form-control mb-2"
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                        <br />
+
+                                        <label className="form-label">
+                                            OS disk  size (gb)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="osDiskSize"
+                                            disabled={disabled.osDiskSize}
+                                            value={vm.osDiskSize}
+                                            min={30}
+                                            max={65536}
+                                            name="osDiskSize"
+                                            placeholder="45"
+                                            className="form-control mb-2"
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                        <br />
                                         <Separation desc="Pre-configuration" title="New SSH key, opened port 22 and a public IP Address are required" />
                                         <label className="form-label">
                                             Admin username
@@ -531,7 +568,7 @@ export default function CreateVM({ setWarning, setToken }) {
                                                             id="githubLink"
                                                             value={vm.githubLink}
                                                             name="githubLink"
-                                                            placeholder="https://www.github.com/johndoe/portfolio"
+                                                            placeholder={`https://www.github.com/johndoe/portfolio`}
                                                             className="form-control mb-2"
                                                             pattern="/^(?:https?:\/\/)?(?:www\.)?github\.com\/([a-zA-Z0-9._-]+)\/([a-zA-Z0-9._-]+)(?:\/)?$/"
                                                             onChange={handleInputChange}

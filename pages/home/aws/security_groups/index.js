@@ -96,14 +96,14 @@ export default function SecurityGroup({ setWarning, setToken }) {
                 <div className="col-md-8">
                     <div className="card">
                         <div className="card-body">
-                            <div className="row mb-3">
-                                <div className="col-md-4">
+                            <div className="d-flex flex-row mb-4">
+                                <div className="col-lg-3 col-md-4 col-sm-5">
                                     <label htmlFor="account" className="form-label">Account</label><br />
                                     <select
                                         id="account"
                                         name="account"
                                         value={filter.account}
-                                        className="form-select w-50 bg-light border-0"
+                                        className="form-select bg-light border-0"
                                         onChange={handleInputChange}
                                     >
                                         <option value="" disabled>Choose an account</option>
@@ -113,19 +113,20 @@ export default function SecurityGroup({ setWarning, setToken }) {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="col-md-4">
+                                <div className="col-md-4 col-sm-5">
                                     <label htmlFor="region" className="form-label">Region</label><br />
                                     <select
                                         id="region"
                                         name="region"
                                         value={filter.region}
-                                        className="form-select w-50 bg-light border-0"
+                                        className="form-select bg-light border-0"
                                         onChange={handleInputChange}
                                     >
-                                        <option value="" defaultValue disabled>Choose a region</option>
+                                        <option value="" disabled>Choose a region</option>
                                         {regions.map((region, index) => (
                                             <option key={index} value={region}>{region}</option>
                                         ))}
+
                                     </select>
                                 </div>
                                 <button className="border border-dark rounded d-flex align-items-center ml-auto mr-3 px-3 btn btn-light" onClick={() => { getSecurityGroups(token, filter.region, filter.account, setFilter) }} disabled={!(filter.account && filter.region)}>

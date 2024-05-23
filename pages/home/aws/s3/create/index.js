@@ -108,7 +108,7 @@ export default function CreateS3({ setWarning, setToken }) {
             }
 
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_BACKEND_IP_ADDR}terraform/aws/s3/`,
+                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}terraform/aws/s3/`,
                 {
                     method: "POST",
                     body: bucketConfig,

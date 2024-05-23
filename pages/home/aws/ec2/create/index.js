@@ -65,7 +65,7 @@ export default function CreateEC2({ setWarning, setToken }) {
             }
         });
 
-    }, []); // token variation for re-execution
+    }, [token, setToken]); // token variation for re-execution
 
 
     // Can not be optimized cause, calling functions time to time
@@ -448,7 +448,7 @@ export default function CreateEC2({ setWarning, setToken }) {
                                                     onChange={handleInputChange}
                                                 >
                                                     <option value="" disabled>choose a software to install</option>
-                                                    <option value="nothing">don't install anything</option>
+                                                    <option value="nothing">don&apos;t install anything</option>
                                                     {INIT.softwares.map((software, index) => (
                                                         <option key={index} value={software}>{software}</option>
                                                     ))}

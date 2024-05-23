@@ -13,12 +13,12 @@ export default function CreateVM({ setWarning, setToken }) {
         GITHUB: {
             account: "",
             location: "",
-            webApp:"",
+            webApp: "",
             url: "",
             branch: "",
             outputLocation: "",
-            gitToken: "",
-            resourceGroup:""
+            gitAccount: "",
+            resourceGroup: ""
         },
         DISABLED: {
             location: true,
@@ -26,7 +26,7 @@ export default function CreateVM({ setWarning, setToken }) {
             url: true,
             branch: true,
             outputLocation: true,
-            gitToken: true,
+            gitAccount: true,
         }
     };
 
@@ -55,7 +55,7 @@ export default function CreateVM({ setWarning, setToken }) {
             }
         });
 
-    }, []); // Token variation for re-execution
+    }, [token, setToken]); // Token variation for re-execution
 
 
     //  Can not be optimized cause, calling functions time to time
@@ -274,18 +274,24 @@ export default function CreateVM({ setWarning, setToken }) {
                                         <br />
                                         <br />
                                         <label className="form-label">
-                                            git token
+                                            github
                                         </label>
-                                        <input
-                                            type="password"
-                                            id="gitToken"
-                                            name="gitToken"
+                                        <select
+                                            type="text"
+                                            id="gitAccount"
+                                            name="gitAccount"
+                                            value={github.gitAccount}
                                             className="form-select w-100 bg-light border-0"
-                                            value={github.gitToken}
+                                            disabled={disabled.gitAccount}
                                             onChange={handleInputChange}
-                                            disabled={disabled.gitToken}
                                             required
-                                        />
+                                        > <option value="" defaultValue disabled>choose an existant account</option>
+                                            {chooseFrom.accounts.map(name => (
+                                                name.startsWith("git") &&
+                                                <option key={name} value={name}>{name}</option>
+                                            ))}
+                                        </select>
+
                                         <br />
                                         <br />
                                         <div className="d-flex justify-content-center mx-4 mt-5 mb-lg-4">

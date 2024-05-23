@@ -49,7 +49,7 @@ export default function CreateRG({ setWarning, setToken }) {
             }
         });
 
-    }, []); // Token variation for re-execution
+    }, [token, setToken]); // Token variation for re-execution
 
 
     //  Can not be optimized cause, calling functions time to time

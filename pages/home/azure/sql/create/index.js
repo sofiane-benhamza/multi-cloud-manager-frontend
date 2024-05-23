@@ -58,7 +58,7 @@ export default function CreateVM({ setWarning, setToken }) {
             }
         });
 
-    }, []); // Token variation for re-execution
+    }, [token, setToken]); // Token variation for re-execution
 
 
     //  Can not be optimized cause, calling functions time to time
@@ -98,7 +98,7 @@ export default function CreateVM({ setWarning, setToken }) {
 
     const handleCreateDB = async (e) => {
         e.preventDefault();
-        setTerminalOutput({ terraform: false});
+        setTerminalOutput({ terraform: false });
         setCreateButtonContent(<span><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> please wait</span>);
         try {
             const DBConfig = new FormData();
@@ -295,7 +295,7 @@ export default function CreateVM({ setWarning, setToken }) {
                                             onChange={handleInputChange}
                                             required
                                         />
-                                        <Separation desc="Pre-configuration"/>
+                                        <Separation desc="Pre-configuration" />
                                         <label className="form-label">
                                             Admin username
                                         </label>
@@ -332,7 +332,7 @@ export default function CreateVM({ setWarning, setToken }) {
                                             required
                                         />
 
-                              
+
                                         <div className="d-flex justify-content-center mx-4 mt-5 mb-lg-4">
                                             <button
                                                 type="submit"

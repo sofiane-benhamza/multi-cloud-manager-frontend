@@ -54,9 +54,8 @@ export default function Login({ setToken, setWarning }) {
                     isShown: true
                 })
                 router.push("/home")
-                const expirationTime = new Date().getTime() + 600000; // Current time + 1 hour (in ms)
                 setToken(data.token);
-                localStorage.setItem("token",data.token)
+                localStorage.setItem("token", data.token)
             } else {
                 setWarning({
                     message: "please check your email and password",  //dont show any sign of existing account !
@@ -69,15 +68,15 @@ export default function Login({ setToken, setWarning }) {
             console.error("An error occurred while connecting", error);
             setWarning({
                 message: "something went wrong, please try again later or contact support [error code ... 943].",
-                type :"danger",
+                type: "danger",
                 isShown: true
             })
         }
     };
 
-    useEffect(()=>{
+    useEffect(() => {
         isLoggedIn && router.push("/home");
-    },[isLoggedIn])
+    }, [isLoggedIn, router])
 
     return (
         <div className="d-flex justify-content-center mt-5 mb-5">
@@ -89,7 +88,7 @@ export default function Login({ setToken, setWarning }) {
                                 <div className="col-12">
                                     <h2 className="text-center h2 mb-2 mx-1 my-4 md-4 tilt-warp-title">
                                         <i className="bi bi-people-fill mr-3"></i>
-                                        Let's Connect
+                                        Let&apos;s Connect
                                     </h2>
                                     <form onSubmit={handleConnect} className="tilt-warp-title h6">
                                         <label className="form-label mt-2" htmlFor="email">
@@ -140,6 +139,6 @@ export default function Login({ setToken, setWarning }) {
                 </div>
             </div>
         </div>
-        
+
     );
 }

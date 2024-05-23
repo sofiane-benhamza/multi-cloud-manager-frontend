@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { AuthContext } from '../_app';
 import { Separation, validateEmail } from "@/utils/general";
 
-export default function Signup({setWarning}) {
+export default function Signup({ setWarning }) {
     const router = useRouter();
 
     const [personnalInfo, setPersonnalInfo] = useState({
@@ -40,19 +40,19 @@ export default function Signup({setWarning}) {
                     body: signUpForm,
                 }
             );
-            
+
             if (response.status == 200) {
                 setWarning({
-                    message:"Welcome onboard Mr. "+personnalInfo.fname+", please connect using your credentials.",
-                    type:"success",
-                    isShown:true
+                    message: "Welcome onboard Mr. " + personnalInfo.fname + ", please connect using your credentials.",
+                    type: "success",
+                    isShown: true
                 })
                 router.push("/login");
-            }else{
+            } else {
                 setWarning({
-                    message:"This email is already associated with an account. if you think its not please contact our support service",
-                    type:"warning",
-                    isShown:true
+                    message: "This email is already associated with an account. if you think its not please contact our support service",
+                    type: "warning",
+                    isShown: true
                 })
             }
 
@@ -64,9 +64,9 @@ export default function Signup({setWarning}) {
     //redirect if user logged in
     const { isLoggedIn } = useContext(AuthContext);
 
-    useEffect(()=>{
+    useEffect(() => {
         isLoggedIn && router.push("/home");
-    },[isLoggedIn])
+    }, [isLoggedIn, router])
 
     return (
         <div className="h-100 vh d-flex align-items-center justify-content-center p-5">
@@ -83,7 +83,7 @@ export default function Signup({setWarning}) {
                                         <form className="mx-1 mx-md-4 tilt-warp-title h6" onSubmit={handleCreateAccount}>
                                             <h2 className="text-center h2 mb-2 mx-1 mx-md-4">
                                                 <i className="bi bi-people mr-3"></i>
-                                                Let's Connect
+                                                Let&apos;s Connect
                                             </h2>
                                             <div className="row">
                                                 <div className="col">

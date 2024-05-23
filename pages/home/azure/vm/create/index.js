@@ -78,7 +78,7 @@ export default function CreateVM({ setWarning, setToken }) {
             }
         });
 
-    }, []); // Token variation for re-execution
+    }, [token, setToken]); // Token variation for re-execution
 
 
     //  Can not be optimized cause, calling functions time to time
@@ -553,7 +553,7 @@ export default function CreateVM({ setWarning, setToken }) {
                                                     onChange={handleInputChange}
                                                 >
                                                     <option value="" disabled>choose a software to install</option>
-                                                    <option value="nothing">don't install anything</option>
+                                                    <option value="nothing">don&apos;t install anything</option>
                                                     {INIT.softwares.map((software, index) => (
                                                         <option key={index} value={software}>{software}</option>
                                                     ))}

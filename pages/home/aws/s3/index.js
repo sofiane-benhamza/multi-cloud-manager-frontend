@@ -33,7 +33,7 @@ export default function S3({ setWarning }) {
                 }
             });
         }
-    }, [filter.account, filter.region]);
+    }, [filter.account, filter.region, token, setWarning]);
 
     // Handle input change for filter
     const handleInputChange = (e) => {

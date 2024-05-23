@@ -51,7 +51,7 @@ export default function CreateVN({ setWarning, setToken }) {
         getCredentials(token, setChooseFrom).then((isOk) => {
             if (!isOk) setToken("expired")
         });;
-    }, [token]);
+    }, [token, setToken]);
 
     const vnArray = Object.keys(vn)
     const handleInputChange = (e) => {

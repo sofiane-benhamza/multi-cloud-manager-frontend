@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { regions } from "@/utils/aws";
 import { getCredentials, Separation } from '@/utils/general';
-import { AuthContext } from "../@/pages/_app";
+import { AuthContext } from "@/pages/_app";
 
 export default function CreateECS({ setWarning, setToken }) {
 
@@ -101,7 +101,7 @@ export default function CreateECS({ setWarning, setToken }) {
       if (!isOk) setToken("expired")
     });;
 
-  }, []);
+  }, [token, setToken]);
 
   const [createButtonContent, setCreateButtonContent] = useState(<span>Create</span>);
 

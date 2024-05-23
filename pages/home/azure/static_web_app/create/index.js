@@ -53,7 +53,7 @@ export default function CreateVM({ setWarning, setToken }) {
             }
         });
 
-    }, []); // Token variation for re-execution
+    }, [token, setToken]); // Token variation for re-execution
 
 
     //  Can not be optimized cause, calling functions time to time
@@ -235,7 +235,7 @@ export default function CreateVM({ setWarning, setToken }) {
                                         <br />
                                         <br />
                                         <label className="form-label">
-                                            Web application's name
+                                            Web application&apos;s name
                                         </label>
                                         <input
                                             type="text"

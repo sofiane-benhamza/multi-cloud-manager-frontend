@@ -18,7 +18,7 @@ export default function EC2({ setWarning, setToken}) {
                 setToken("expired")
             }
         });
-    }, []);
+    }, [token, setToken]);
 
     // Effect to fetch EC2 instances when filter changes
     useEffect(() => {
@@ -36,7 +36,7 @@ export default function EC2({ setWarning, setToken}) {
             });
 
         }
-    }, [filter.account, filter.region]);
+    }, [filter.account, filter.region, setWarning, token]);
 
     // Handle input change for filter
     const handleInputChange = (e) => {

@@ -16,7 +16,7 @@ export default function ECS({ setWarning, setToken }) {
         getCredentials(token, setFilter).then((isOk) => {
             if (!isOk) setToken("expired")
         });
-    }, []);
+    }, [token, setToken]);
 
     // Effect to fetch EC2 instances when filter changes
     useEffect(() => {
@@ -34,7 +34,7 @@ export default function ECS({ setWarning, setToken }) {
             });
 
         }
-    }, [filter.account, filter.region]);
+    }, [filter.account, filter.region, token, setWarning]);
 
     // Handle input change for filter
     const handleInputChange = (e) => {

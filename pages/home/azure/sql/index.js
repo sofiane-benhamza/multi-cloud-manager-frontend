@@ -18,7 +18,7 @@ export default function SQL({ setWarning, setToken }) {
             if (!ok)
                 setToken("expired")
         });
-    }, []);
+    }, [token, setToken]);
 
     // Effect to fetch VMS when filter changes
     useEffect(() => {
@@ -36,7 +36,7 @@ export default function SQL({ setWarning, setToken }) {
             });
 
         }
-    }, [filter.account, filter.location]);
+    }, [filter.account, filter.location, token, setWarning]);
 
     // Handle input change for filter
     const handleInputChange = (e) => {

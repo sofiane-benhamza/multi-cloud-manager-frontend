@@ -18,7 +18,7 @@ export default function AmplifyApp({ setWarning, setToken }) {
                 setToken("expired")
             }
         });
-    }, []);
+    }, [token, setToken]);
 
     // Effect to fetch applications when filter changes
     useEffect(() => {
@@ -36,7 +36,7 @@ export default function AmplifyApp({ setWarning, setToken }) {
             });
 
         }
-    }, [filter.account, filter.region]);
+    }, [filter.account, filter.region, token, setWarning]);
 
     // Handle input change for filter
     const handleInputChange = (e) => {
@@ -137,6 +137,7 @@ export default function AmplifyApp({ setWarning, setToken }) {
                                             <th className="text-center">ID</th>
                                             <th className="text-center">Name</th>
                                             <th className="text-center">repository</th>
+                                            <th className="text-center">visit</th>
                                             <th className="text-center">technology</th>
                                             <th className="text-center">Action</th>
                                         </tr>
@@ -147,6 +148,7 @@ export default function AmplifyApp({ setWarning, setToken }) {
                                                 <td className="text-center">{application.id}</td>
                                                 <td className="text-center">{application.name}</td>
                                                 <td className="text-center" title={application.repository} ><button disabled={application.id == "-"} class="btn btn-dark"><a href={application.repository} className="bi bi-box-arrow-up-right" target="_blank"></a></button></td>
+                                                <td className="text-center" title={application.defaultDomain} ><button disabled={application.id == "-"} class="btn btn-dark"><a href={"https://"+application.defaultDomain} className="bi bi-box-arrow-up-right" target="_blank"></a></button></td>
                                                 <td className="text-center">{application.technology}</td>
                                                 <td className="text-center">
                                                     <button className="btn mx-1 btn-danger" title="Terminate" disabled={application.id == "-"} onClick={() => { handleAmplifyAppDelete(application.id) }}>
@@ -157,6 +159,7 @@ export default function AmplifyApp({ setWarning, setToken }) {
                                             </tr>
                                         ))) : null}
                                         <tr className="bg-dark">
+                                            <td className="px-2">{ }</td>
                                             <td className="px-2">{ }</td>
                                             <td className="px-2">{ }</td>
                                             <td className="px-2">{ }</td>

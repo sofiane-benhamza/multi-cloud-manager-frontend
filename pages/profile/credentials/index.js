@@ -6,7 +6,7 @@ import { useEffect, useContext, useState } from "react";
 import ProfileNavbar from '@/comps/ProfileNavbar.js'; // Importing the profile component
 import { AuthContext } from "@/pages/_app";
 import { getCredentials } from "@/utils/general";
-
+import Image from "next/image";
 export default function ProfileCredentials({ setWarning }) {
     const INIT = {
         newCloudAccount: {
@@ -17,10 +17,15 @@ export default function ProfileCredentials({ setWarning }) {
                 secretAccessKey: ""
             },
             azure: {
+                id: "",
                 subscriptionId: "",
                 clientId: "",
                 clientSecret: "",
                 tenantId: ""
+            },
+            git: {
+                id: "",
+                gitToken: ""
             },
             gcp: {}
         }
@@ -28,7 +33,7 @@ export default function ProfileCredentials({ setWarning }) {
     const { token } = useContext(AuthContext);
     const router = useRouter();
     const [addCredentialActive, setAddCredentialActive] = useState(false);
-    const [accounts, setAccounts] = useState({ aws: [{}], azure: [{}], gcp: [{}] });  // many accounts,  mappable array of objects
+    const [accounts, setAccounts] = useState({ aws: [{}], azure: [{}], gcp: [{}], git: [{}] });  // many accounts,  mappable array of objects
 
     const [newCloudAccount, setNewCloudAccount] = useState(INIT.newCloudAccount)  // Unique account => object is enough
 
@@ -37,15 +42,13 @@ export default function ProfileCredentials({ setWarning }) {
 
     const AWSCredentialCard = ({ id, accessKeyId, secretAccessKey }) => {
 
-        const srcOfLogo = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/1024px-Amazon_Web_Services_Logo.svg.png";
-
         return (
             <Card className="mb-5 col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12">
                 <div className="mx-2 border border-dark rounded">
                     <CardHeader className="justify-between">
                         <div className="d-flex flex-row justify-content-left align-items-center gap-5">
                             <div>
-                                <img   className="bg-light p-2" width="40px" height="35px" src={srcOfLogo} alt="Logo" />
+                                <Image className="bg-light p-2" width={40} height={40} src="/cloud/aws/logo.png" alt="Logo" />
                             </div>
                             <div className="ml-3 m-0 d-flex flex-row align-items-center">
                                 <div className="font-semibold leading-none font-weight-bolder baloo-da-beautiful">Amazon Web Services</div>
@@ -82,15 +85,13 @@ export default function ProfileCredentials({ setWarning }) {
 
     const AZURECredentialCard = ({ id, subscriptionId, clientId, clientSecret, tenantId }) => {
 
-        const srcOfLogo = "https://static-00.iconduck.com/assets.00/microsoft-azure-icon-512x396-6fn0yfat.png";
-
         return (
             <Card className="mb-5 col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12">
                 <div className="mx-2 border border-dark rounded">
                     <CardHeader className="justify-between">
                         <div className="d-flex flex-row justify-content-left align-items-center gap-5">
                             <div>
-                                <img   className="bg-light p-2" width="40px" height="35px" src={srcOfLogo} alt="Logo" />
+                                <Image className="bg-light p-2" width={40} height={40} src="/cloud/az/logo.png" alt="Logo" />
                             </div>
                             <div className="ml-3 m-0 d-flex flex-row align-items-center">
                                 <div className="font-semibold leading-none font-weight-bolder baloo-da-beautiful">Microsoft Azure</div>
@@ -122,6 +123,43 @@ export default function ProfileCredentials({ setWarning }) {
                                 <tr>
                                     <td>Tenant ID</td>
                                     <td>{tenantId}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </CardBody>
+                </div>
+            </Card>
+        );
+    }
+
+    const GithubCredentialCard = ({ id, gitToken }) => {
+
+        return (
+            <Card className="mb-5 col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12">
+                <div className="mx-2 border border-dark rounded">
+                    <CardHeader className="justify-between">
+                        <div className="d-flex flex-row justify-content-left align-items-center gap-5">
+                            <div>
+                                <Image className="bg-light p-2" width={40} height={40} src="/cloud/git/logo.png" alt="Logo" />
+                            </div>
+                            <div className="ml-3 m-0 d-flex flex-row align-items-center">
+                                <div className="font-semibold leading-none font-weight-bolder baloo-da-beautiful">github</div>
+                            </div>
+                            <button className="text-light ml-auto border bg-danger p-2 rounded" disabled={id === "will be generated"} onClick={() => { deleteCredential(id) }}>
+                                <i className="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </CardHeader>
+                    <CardBody className="overflow-visible d-flex flex-column justify-content-center">
+                        <table className="table text-dark">
+                            <tbody>
+                                <tr>
+                                    <td>ID</td>
+                                    <td>{id}</td>
+                                </tr>
+                                <tr>
+                                    <td>Token</td>
+                                    <td>{gitToken}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -163,8 +201,10 @@ export default function ProfileCredentials({ setWarning }) {
                     form.append("clientSecret", newCloudAccount.azure.clientSecret)
                     form.append("tenantId", newCloudAccount.azure.tenantId)
                     break;
+                case "git":
+                    form.append("gitToken", newCloudAccount.git.gitToken)
+                    break;
                 case "gcp":
-                    // Handle GCP cloud account
                     break;
                 default:
                     // Handle other cases or provide an error message
@@ -206,6 +246,15 @@ export default function ProfileCredentials({ setWarning }) {
                                 clientId: newCloudAccount.azure.clientId.substring(1, 4) + "-XXXXXXX",
                                 clientSecret: newCloudAccount.azure.clientSecret.substring(1, 4) + "-XXXXXXX",
                                 tenantId: newCloudAccount.azure.tenantId.substring(1, 4) + "-XXXXXXX"
+                            }]
+                        }))
+                        break;
+                    case "git":
+                        setAccounts((prev) => ({
+                            ...prev,
+                            git: [...prev.git, {
+                                id: 'will be generated',
+                                gitToken: newCloudAccount.git.gitToken.substring(1, 4) + "-XXXXXXX",
                             }]
                         }))
                         break;
@@ -263,6 +312,8 @@ export default function ProfileCredentials({ setWarning }) {
                     cloudType = "aws";
                 } else if (id.startsWith("azure")) {
                     cloudType = "azure";
+                } else if (id.startsWith("git")) { // GCP
+                    cloudType = "git";
                 } else { // GCP
                     cloudType = "gcp";
                 }
@@ -305,6 +356,14 @@ export default function ProfileCredentials({ setWarning }) {
                                             checked={newCloudAccount.active == "azure"} />
                                         <label className="form-check-label" htmlFor="azure">
                                             AZURE
+                                        </label>
+                                    </div>
+                                    <div className="form-check m-1">
+                                        <input className="form-check-input" type="radio" name="git" id="git" value="git"
+                                            onChange={(e) => handleCloudChange(e.target.value)}
+                                            checked={newCloudAccount.active == "git"} />
+                                        <label className="form-check-label" htmlFor="git">
+                                            GIT
                                         </label>
                                     </div>
                                     <div className="form-check m-1">
@@ -417,6 +476,29 @@ export default function ProfileCredentials({ setWarning }) {
                                 </>
                             }
 
+                            {newCloudAccount.active == "git" &&
+                                <>
+                                    <table className="table text-dark">
+                                        <tbody>
+                                            <tr>
+                                                <td>Git token</td>
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        className="w-100"
+                                                        defaultValue={newCloudAccount.git.gitToken}
+                                                        minLength={8}
+                                                        onBlur={(e) => { setNewCloudAccount(prevState => ({ ...prevState, git: { gitToken: e.target.value } })); e.target.focus() }}
+                                                        required
+                                                    />
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <a className="text-secondary cursor-pointer" href="https://docs.github.com/en/enterprise-server@3.9/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens" target="_blank">where to get those ?</a>
+                                </>
+                            }
+
                         </CardBody>
                     </form>
                 </Card>
@@ -463,6 +545,16 @@ export default function ProfileCredentials({ setWarning }) {
                             clientId={account.clientId}
                             clientSecret={account.clientSecret}
                             tenantId={account.tenantId}
+                        />
+                    ))}
+                </div>
+                <div className="d-grid row w-100 col-xl-10 col-lg-10 col-md-11 col-sm-12 col-xs-12 text-dark justify-content-start">
+                    {accounts.git.map((account, index) => (
+                        account.id &&
+                        <GithubCredentialCard
+                            key={index} // Assuming index is a suitable key
+                            id={account.id}
+                            gitToken={account.gitToken}
                         />
                     ))}
                     <AddCredentialCard />

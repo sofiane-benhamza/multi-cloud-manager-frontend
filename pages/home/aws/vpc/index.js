@@ -16,7 +16,7 @@ export default function VPC({ setWarning, setToken }) {
         getCredentials(token, setFilter).then((isOk) => {
             if (!isOk) setToken("expired")
         });;
-    }, []);
+    }, [token, setToken]);
 
     // Effect to fetch vpcs when filter changes
     useEffect(() => {
@@ -33,7 +33,7 @@ export default function VPC({ setWarning, setToken }) {
                 }
             });
         }
-    }, [filter.account, filter.region]);
+    }, [filter.account, filter.region,  token, setWarning]);
 
     // Handle input change for filter
     const handleInputChange = (e) => {

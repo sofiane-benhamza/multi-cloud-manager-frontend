@@ -15,8 +15,7 @@ async function getCredentials(token, setChooseFrom, getFullCredentials) {
             if (data.message) return true  // the case where there is no  credentials yet
 
             if (getFullCredentials) {
-                let awsAccounts = [{}];
-                let azureAccounts = [{}];
+                let awsAccounts = [{}], azureAccounts = [{}], gitAccounts = [{}];
 
                 if (data.aws.length > 0) {
                     awsAccounts = data.aws.map(item => ({
@@ -36,12 +35,19 @@ async function getCredentials(token, setChooseFrom, getFullCredentials) {
                     }));
                 }
 
-
-                setChooseFrom((prev) => ({ ...prev, "aws": awsAccounts, "azure": azureAccounts }));
+                if (data.git.length > 0) {
+                    gitAccounts = data.git.map(item => ({
+                        id: item.account,
+                        gitToken: item.gitToken
+                    }));
+                }
+                console.warn(awsAccounts, azureAccounts, gitAccounts)
+                setChooseFrom((prev) => ({ ...prev, "aws": awsAccounts, "azure": azureAccounts, "git": gitAccounts }));
             } else { // Only IDs
                 const awsAccounts = data.aws.map(item => item.account);
                 const azureAccounts = data.azure.map(item => item.account);
-                const accounts = [...awsAccounts, ...azureAccounts];
+                const githubAccounts = data.git.map(item => item.account);
+                const accounts = [...awsAccounts, ...azureAccounts, ...githubAccounts];
                 setChooseFrom((prevState) => ({
                     ...prevState,
                     accounts: accounts,

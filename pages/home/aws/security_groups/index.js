@@ -21,7 +21,7 @@ export default function SecurityGroup({ setWarning, setToken }) {
                 setToken("expired")
             }
         });;
-    }, [token]);
+    }, [token, setToken]);
 
     // Effect to fetch vpcs when filter changes
     useEffect(() => {
@@ -39,7 +39,7 @@ export default function SecurityGroup({ setWarning, setToken }) {
                 }
             });
         }
-    }, [filter.account, filter.region]);
+    }, [filter.account, filter.region, token, setWarning]);
 
     // Handle input change for filter
     const handleInputChange = (e) => {

@@ -58,7 +58,7 @@ export default function CreateRDS({ setWarning, setToken }) {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const index = databaseArray.indexOf(name);
-    (index !== -1) && setDisabled((prev) => ({ ...prev, [databaseArray[index]] : true,[databaseArray[index + 1]]: false }))
+    (index !== -1) && setDisabled((prev) => ({ ...prev, [databaseArray[index]]: true, [databaseArray[index + 1]]: false }))
     name === "account" && setDatabase(INIT.database);
     name === "engine" && getEngineVersions(value);
     setDatabase({ ...database, [name]: value });
@@ -161,7 +161,7 @@ export default function CreateRDS({ setWarning, setToken }) {
       if (!isOk) setToken("expired")
     });;
 
-  }, []);
+  }, [token, setToken]);
 
   const [createButtonContent, setCreateButtonContent] = useState(<span>Create</span>);
 

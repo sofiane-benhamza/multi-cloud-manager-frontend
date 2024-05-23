@@ -3,7 +3,6 @@ import { Card, CardHeader, CardBody, Image } from "@nextui-org/react";
 import Link from 'next/link';
 
 export default function azure() {
-    const router = useRouter();
 
     const azureServices = [
         { name: "Deploy on a static web app", link: "azure_static_web_app", logoUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTR0_YrITSMkpfxE2DTrbLk2KpChqgKhGoK18B2kfo0aQ&s" },
@@ -33,7 +32,7 @@ const AzureService = ({ name, logoUrl, link }) => {
                 <CardHeader className="justify-between">
                     <div className="d-flex text-dark font-weight-bold flex-row justify-content-left align-items-center gap-5">
                         <div>
-                            <img   className="rounded p-1" width="40px" height="35px" src="https://static-00.iconduck.com/assets.00/microsoft-azure-icon-512x396-6fn0yfat.png" />
+                            <Image   className="rounded p-1" width={40} height={35} src="https://static-00.iconduck.com/assets.00/microsoft-azure-icon-512x396-6fn0yfat.png" alt="Github logo"/>
                         </div>
                         <div className="ml-3 m-0">
                             <p className="tilt-warp-title h5">{name}</p>

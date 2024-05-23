@@ -23,7 +23,7 @@ export default function Home() {
     if (isLoggedIn) {
       router.push("/home");
     }
-  }, [isLoggedIn])
+  }, [isLoggedIn, router])
 
 
 

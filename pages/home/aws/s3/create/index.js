@@ -45,7 +45,7 @@ export default function CreateS3({ setWarning, setToken }) {
         getCredentials(token, setChooseFrom).then((isOk) => {
             if (!isOk) setToken("expired")
         });;
-    }, []);
+    }, [token, setToken]);
 
     // Can not be optimized cause, calling functions time to time
     const handleInputChange = (e) => {

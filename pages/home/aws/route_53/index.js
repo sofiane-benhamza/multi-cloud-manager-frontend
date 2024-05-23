@@ -18,7 +18,7 @@ export default function Route53({ setWarning, setToken }) {
                 setToken("expired")
             }
         });
-    }, []);
+    }, [token, setToken]);
 
     // Effect to fetch EC2 domains when filter changes
     useEffect(() => {
@@ -36,7 +36,7 @@ export default function Route53({ setWarning, setToken }) {
             });
 
         }
-    }, [filter.account]);
+    }, [filter.account, setWarning, token]);
 
     // Handle input change for filter
     const handleInputChange = (e) => {

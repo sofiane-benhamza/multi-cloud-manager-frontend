@@ -1,14 +1,13 @@
 import { useRouter } from "next/router";
 import ProfileNavbar from '@/comps/ProfileNavbar.js'; // Importing the profile component
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import { AuthContext } from "../_app";
 
 export default function Profile() {
     const { token } = useContext(AuthContext);
-    const router = useRouter();
     const [fact, setFact] = useState("")
 
-    const getFact = async () => {
+    const getFact = useCallback(async () => {
         try {
             const response = await fetch(
                 process.env.NEXT_PUBLIC_BACKEND_ADDR + "cloud/facts/?token=" + token,
@@ -18,17 +17,14 @@ export default function Profile() {
             );
 
             if (response.ok) {
-                const data = await response.json()
+                const data = await response.json();
                 setFact(data.fact);
-            } 
+            }
         } catch (error) {
             console.error("something went wrong");
         }
-    }
+    }, [token, setFact]);
 
-    useEffect(() => {
-        getFact();
-    }, [])
     return (
         <>
             <ProfileNavbar />

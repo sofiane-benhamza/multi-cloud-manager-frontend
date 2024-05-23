@@ -16,7 +16,7 @@ export default function CreateAmplifyApp({ setWarning, setToken }) {
             appName: "",
             appTechnology: "",
             githubLink: "",
-            githubToken: "",
+            gitAccount: "",
             environmentVariables: {}
         },
         disabled: {
@@ -24,7 +24,7 @@ export default function CreateAmplifyApp({ setWarning, setToken }) {
             appName: true,
             appTechnology: true,
             githubLink: true,
-            githubToken: true,
+            gitAccount: true,
             environmentVariables: true
         }
     };
@@ -54,7 +54,7 @@ export default function CreateAmplifyApp({ setWarning, setToken }) {
             }
         });
 
-    }, []); // token variation for re-execution
+    }, [token, setToken]); // token variation for re-execution
 
 
     // Remove disabled sequentiely
@@ -73,8 +73,8 @@ export default function CreateAmplifyApp({ setWarning, setToken }) {
 
     const envVarsCard = (id) => {
         return (<div key={id} className="d-flex column w-100  my-1">
-            <input id={`key-${id}`} type="text" className="w-25 mr-2" onChange={() => { handleFieldChange(id) }} onKeyPress={(e) => { if (e.key === ' ') e.preventDefault(); }} />
-            <input id={`value-${id}`} type="text" onChange={() => { handleFieldChange(id) }} onKeyPress={(e) => { if (e.key === ' ') e.preventDefault(); }} />
+            <input id={`key-${id}`} type="text" className="w-25 mr-2" onChange={() => { handleFieldChange(id) }} onKeyPress={(e) => { if (e.key === " ") e.preventDefault(); }} />
+            <input id={`value-${id}`} type="text" onChange={() => { handleFieldChange(id) }} onKeyPress={(e) => { if (e.key === " ") e.preventDefault(); }} />
             {id != 0 &&
                 <i className=" ml-auto bi bi-trash btn btn-danger" onClick={() => { removeEnvVarsCard(id) }}></i>}
         </div>)
@@ -301,7 +301,7 @@ export default function CreateAmplifyApp({ setWarning, setToken }) {
                                             onChange={handleInputChange}
                                             required
                                         >
-                                            <option value="" defaultValue disabled>Choose the application's technology</option>
+                                            <option value="" defaultValue disabled>Choose the application&apos;s technology</option>
                                             {chooseFrom.technologies.map((technology, index) => (
                                                 <option key={index} value={technology} disabled={disabled.appTechnology}>
                                                     {technology !== "Static" ? technology : technology + " website (must contain index.html at /, no builds)"}
@@ -329,22 +329,25 @@ export default function CreateAmplifyApp({ setWarning, setToken }) {
                                             required
                                         />
                                         <br />
+                                        <br />
                                         <label className="form-label">
-                                            github personnal token <span className="btn btn-light rounded" title="this token is needed to communicate with github whenever there is code updates">?</span>
-                                        </label>                                        <input
+                                            github
+                                        </label>
+                                        <select
                                             type="password"
-                                            id="githubToken"
-                                            value={amplifyApp.githubToken}
-                                            disabled={disabled.githubToken}
-                                            minLength={16}
-                                            maxLength={96}
-                                            name="githubToken"
-                                            placeholder="************************"
-                                            className="form-control mb-2"
+                                            id="gitAccount"
+                                            value={amplifyApp.gitAccount}
+                                            disabled={disabled.gitAccount}
+                                            name="gitAccount"
+                                            className="form-select w-100 bg-light border-0"
                                             onChange={handleInputChange}
                                             required
-                                        />
-                                        <br />
+                                        > <option value="" defaultValue disabled>choose an existant account</option>
+                                            {chooseFrom.accounts.map(name => (
+                                                name.startsWith("git") &&
+                                                <option key={name} value={name}>{name}</option>
+                                            ))}
+                                        </select>
                                         <Separation desc="environment variables" />
                                         <div className="d-flex column w-100  my-1">
                                             <p className="w-25 ml-2">Key</p>
@@ -359,7 +362,7 @@ export default function CreateAmplifyApp({ setWarning, setToken }) {
                                             <button
                                                 type="submit"
                                                 className="btn btn-dark btn-lg"
-                                                disabled={!(createButtonContent.props.children === 'Create')}
+                                                disabled={!(createButtonContent.props.children === "Create")}
                                             >{createButtonContent}
                                             </button>
                                         </div>

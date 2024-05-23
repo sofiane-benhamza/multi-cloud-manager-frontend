@@ -1,7 +1,8 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { useRouter } from "next/router";
 import { AuthContext } from "@/pages/_app";
-import { regions, validateIPAddress } from "@/utils/aws";
+import { regions } from "@/utils/aws";
+import { validateIPAddress } from "@/utils/general";
 import { getCredentials } from "@/utils/general";
 
 export default function CreateVPC({ setWarning, setToken }) {
@@ -44,7 +45,7 @@ export default function CreateVPC({ setWarning, setToken }) {
         getCredentials(token, setChooseFrom).then((isOk) => {
             if (!isOk) setToken("expired")
         });;
-    }, [token]);
+    }, [token, setToken]);
 
     // Can not be optimized cause, calling functions time to time
     const handleInputChange = (e) => {

@@ -1,0 +1,259 @@
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  overflow-x: hidden;
+}
+
+:root {
+  --blue-ocean: #1B205B;
+  --blue-beach: #2036A1;
+}
+
+
+
+
+@import "rootpage.css";
+@import "loader.scss";
+@import "fonts.scss";
+@import "slider.scss";
+@import "scrollbar.scss";
+@import "stars.scss";
+
+a {
+  text-decoration: none !important;
+  color: inherit !important;
+
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.down-to-up {
+  transition: all .3s ease;
+
+  &:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 0 8px var(--blue-beach);
+  }
+}
+
+.custom-dark-button {
+  color: white !important;
+  border-radius: 10px;
+  transition: all .3s;
+
+  &:hover {
+    color: black !important;
+    background-color: white;
+  }
+}
+
+.custom-light-button {
+  border-radius: 10px;
+  color: black !important;
+  transition: all .3s;
+
+  &:hover {
+    color: white !important;
+    background-color: black;
+  }
+}
+
+.custom-ocean-gradiant {
+  background-image: linear-gradient(to top, #4facfe 0%, #00f2fe 100%);
+}
+
+.bg-beach {
+  background-color: var(--blue-beach);
+  color: white;
+  border: 1px 0px 1px 1px solid white;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.bg-ocean {
+  background-color: var(--blue-ocean);
+  color: white;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.bg-black {
+  background-color: black;
+}
+
+.btn-beach {
+  color: white;
+  background-color: transparent;
+  border: 2px solid white;
+  padding: 10px;
+  margin: 0 20px;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--blue-beach);
+    background-color: white;
+  }
+}
+
+.beautiful-number {
+  cursor: pointer;
+
+  &:hover {
+    color: aqua;
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.hover-underline-black,
+.hover-underline-light {
+  position: relative;
+  text-decoration: none;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    transition: width 0.3s ease, left 0.3s ease;
+    transform: translateX(-50%);
+  }
+
+  &:hover::after {
+    width: 100%;
+    left: 50%;
+  }
+}
+
+.hover-underline-black::after {
+  background-color: black;
+}
+
+.hover-underline-light::after {
+  background-color: #FFF;
+}
+
+
+button[disabled] {
+  cursor: not-allowed;
+}
+
+input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.text-underline {
+  text-decoration: underline;
+}
+
+.rounded-10 {
+  border-radius: 10px;
+}
+
+.background {
+  background-image: linear-gradient(90deg, var(--blue-ocean), var(--blue-beach));
+}
+
+.tags-inverse-hover:hover {
+  cursor: pointer;
+  background-color: white;
+  color: black;
+}
+
+.back-to-top {
+  position: fixed;
+  display: none;
+  right: 30px;
+  bottom: 30px;
+  z-index: 11;
+}
+
+.bg-pale {
+  background-color: #F3F4F8;
+}
+
+.min-xh-100 {
+  min-height: calc(100vh - 120px);
+}
+
+.main-home-element {
+  display: flex;
+  align-items: center;
+  min-height: calc(100vh - 120px);
+
+}
+
+.icon-cercle {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.gcp-file-upload {
+  border: 1px solid #ccc;
+  display: inline-block;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+
+.brick-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  /* Adjust the gap as needed */
+  grid-auto-flow: dense;
+}
+
+.brick-layout>* {
+  background: #fff;
+  /* Optional: add a background to the cards */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* Optional: add a shadow to the cards */
+  border-radius: 8px;
+  /* Optional: add rounded corners to the cards */
+  padding: 16px;
+  /* Optional: add padding to the cards */
+}
+
+.shaking {
+  animation: shaking .2s infinite;
+}
+
+@keyframes shaking {
+  0% {
+    transform: translateX(0)
+  }
+
+  25% {
+    transform: translateX(5px)
+  }
+
+  50% {
+    transform: translateX(-5px)
+  }
+
+  75% {
+    transform: translateX(5px)
+  }
+
+  100% {
+    transform: translateX(0)
+  }
+}

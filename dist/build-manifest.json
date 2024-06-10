@@ -27,15 +27,20 @@
       "static/chunks/main.js",
       "static/chunks/pages/home.js"
     ],
-    "/home/aws": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/home/aws.js"
-    ],
     "/home/aws/ec2": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/home/aws/ec2.js"
+    ],
+    "/home/aws/ec2/create": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/home/aws/ec2/create.js"
+    ],
+    "/profile/credentials": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/profile/credentials.js"
     ]
   },
   "ampFirstPages": []

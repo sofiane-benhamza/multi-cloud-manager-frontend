@@ -42,12 +42,13 @@ export default function Signup({ setWarning }) {
     };
 
     const sendEmail = async () => {
+        setConnectButtonContent(<span><span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Please wait</span>);
         try {
             const confirmForm = new FormData();
             confirmForm.append("create", "1");
             confirmForm.append("step", "1");
             confirmForm.append("email", personalInfo.email);
-            confirmForm.append("firstName", personalInfo.fname);
+            confirmForm.append("fname", personalInfo.fname);
 
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_BACKEND_ADDR}users/`,
@@ -73,7 +74,9 @@ export default function Signup({ setWarning }) {
             }
 
         } catch (error) {
-            console.error("Error during registration:", error.message);
+            console.error("Error during registration");
+        } finally {
+            setConnectButtonContent(<span>Sign&nbsp;up</span>);
         }
     };
 

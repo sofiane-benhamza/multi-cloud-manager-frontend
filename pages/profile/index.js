@@ -37,7 +37,7 @@ export default function Profile() {
             <ProfileNavbar />
             <div className="w-100 border border-dark rounded my-4 p-5 container  tilt-warp-title">
                 <h4>did you know ?</h4>
-                <h5>     {fact ? fact : "That we don&apos;t have a useful information for you currently."}</h5>
+                <h5>     {fact ? fact : "That we do  not have a useful information for you currently."}</h5>
 
             </div>
         </>

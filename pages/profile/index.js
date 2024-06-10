@@ -10,7 +10,7 @@ export default function Profile() {
     const getFact = useCallback(async () => {
         try {
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}/cloud/facts/?token=${token}`,
+                `${process.env.NEXT_PUBLIC_BACKEND_ADDR}cloud/facts/?token=${token}`,
                 {
                     method: "GET",
                 }

@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/router";
 import { Card, CardHeader, CardBody } from "@nextui-org/react";
-import { useEffect, useContext, useState } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import ProfileNavbar from '@/comps/ProfileNavbar.js'; // Importing the profile component
 import { AuthContext } from "@/pages/_app";
-import { getCredentials } from "@/utils/general";
+import { getCredentials, wait } from "@/utils/general";
 import Image from "next/image";
 export default function ProfileCredentials({ setWarning }) {
     const INIT = {
@@ -27,11 +27,28 @@ export default function ProfileCredentials({ setWarning }) {
                 id: "",
                 gitToken: ""
             },
-            gcp: {}
+            gcp: {
+                id: "",
+                file: null
+            }
         }
     }
     const { token } = useContext(AuthContext);
-    const router = useRouter();
+    const [waitCard, setWaitCard] = useState(
+        <button className="btn btn-light border-light btn-lg m-5 p-5">
+            <div className="spinner-border text-primary" style={{ fontSize: "40px" }} role="status">
+                <span className="visually-hidden"></span>
+            </div>
+        </button>
+    )
+
+    useEffect(() => {
+        token &&
+            getCredentials(token, setAccounts, true).then((ok) => {
+                setWaitCard(<></>)
+            });
+    }, [token]);
+
     const [addCredentialActive, setAddCredentialActive] = useState(false);
     const [accounts, setAccounts] = useState({ aws: [{}], azure: [{}], gcp: [{}], git: [{}] });  // many accounts,  mappable array of objects
 
@@ -40,21 +57,25 @@ export default function ProfileCredentials({ setWarning }) {
 
     // Passive Comps 
 
-    const AWSCredentialCard = ({ id, accessKeyId, secretAccessKey }) => {
+    const CredentialCard = ({ id, date }) => {
+        let n = 3
+        if (id.charAt(1) == 'z') n = 5;
+        name = id.substring(0, n)
 
         return (
-            <Card className="mb-5 col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12">
-                <div className="mx-2 border border-dark rounded">
+            <Card className="p-2 col-xl-3 col-lg-3 col-md-4 col-sm-6 col-xs-12 my-3 overflow-visible">
+                <div className="my-0 border border-dark rounded shadow down-to-up">
                     <CardHeader className="justify-between">
                         <div className="d-flex flex-row justify-content-left align-items-center gap-5">
                             <div>
-                                <Image className="bg-light p-2" width={40} height={40} src="/cloud/aws/logo.png" alt="Logo" />
+                                <Image className="bg-light p-2" width={40} height={40} src={`/cloud/${name}/logo.png`} alt="Logo" />
                             </div>
-                            <div className="ml-3 m-0 d-flex flex-row align-items-center">
-                                <div className="font-semibold leading-none font-weight-bolder baloo-da-beautiful">Amazon Web Services</div>
+                            <div className="ml-3 d-flex flex-column align-items-left">
+                                <span >{name.toUpperCase()}</span><br />
+                                <span className="small text-secondary">{date}</span>
                             </div>
                             <button className="text-light ml-auto border bg-danger p-2 rounded"
-                                disabled={id === "will be generated"}
+                                disabled={id === "refresh"}
                                 onClick={() => { deleteCredential(id) }}>
                                 <i className="bi bi-trash"></i>
                             </button>
@@ -67,14 +88,6 @@ export default function ProfileCredentials({ setWarning }) {
                                     <td>ID</td>
                                     <td>{id}</td>
                                 </tr>
-                                <tr>
-                                    <td>Access Key ID</td>
-                                    <td>{accessKeyId}</td>
-                                </tr>
-                                <tr>
-                                    <td>Secret Access Key</td>
-                                    <td>{secretAccessKey}</td>
-                                </tr>
                             </tbody>
                         </table>
                     </CardBody>
@@ -83,92 +96,18 @@ export default function ProfileCredentials({ setWarning }) {
         );
     }
 
-    const AZURECredentialCard = ({ id, subscriptionId, clientId, clientSecret, tenantId }) => {
 
-        return (
-            <Card className="mb-5 col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12">
-                <div className="mx-2 border border-dark rounded">
-                    <CardHeader className="justify-between">
-                        <div className="d-flex flex-row justify-content-left align-items-center gap-5">
-                            <div>
-                                <Image className="bg-light p-2" width={40} height={40} src="/cloud/az/logo.png" alt="Logo" />
-                            </div>
-                            <div className="ml-3 m-0 d-flex flex-row align-items-center">
-                                <div className="font-semibold leading-none font-weight-bolder baloo-da-beautiful">Microsoft Azure</div>
-                            </div>
-                            <button className="text-light ml-auto border bg-danger p-2 rounded" disabled={id === "will be generated"} onClick={() => { deleteCredential(id) }}>
-                                <i className="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </CardHeader>
-                    <CardBody className="overflow-visible d-flex flex-column justify-content-center">
-                        <table className="table text-dark">
-                            <tbody>
-                                <tr>
-                                    <td>ID</td>
-                                    <td>{id}</td>
-                                </tr>
-                                <tr>
-                                    <td>Subscription ID</td>
-                                    <td>{subscriptionId}</td>
-                                </tr>
-                                <tr>
-                                    <td>Client ID</td>
-                                    <td>{clientId}</td>
-                                </tr>
-                                <tr>
-                                    <td>Client Secret</td>
-                                    <td>{clientSecret}</td>
-                                </tr>
-                                <tr>
-                                    <td>Tenant ID</td>
-                                    <td>{tenantId}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </CardBody>
-                </div>
-            </Card>
-        );
-    }
 
-    const GithubCredentialCard = ({ id, gitToken }) => {
-
-        return (
-            <Card className="mb-5 col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12">
-                <div className="mx-2 border border-dark rounded">
-                    <CardHeader className="justify-between">
-                        <div className="d-flex flex-row justify-content-left align-items-center gap-5">
-                            <div>
-                                <Image className="bg-light p-2" width={40} height={40} src="/cloud/git/logo.png" alt="Logo" />
-                            </div>
-                            <div className="ml-3 m-0 d-flex flex-row align-items-center">
-                                <div className="font-semibold leading-none font-weight-bolder baloo-da-beautiful">github</div>
-                            </div>
-                            <button className="text-light ml-auto border bg-danger p-2 rounded" disabled={id === "will be generated"} onClick={() => { deleteCredential(id) }}>
-                                <i className="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </CardHeader>
-                    <CardBody className="overflow-visible d-flex flex-column justify-content-center">
-                        <table className="table text-dark">
-                            <tbody>
-                                <tr>
-                                    <td>ID</td>
-                                    <td>{id}</td>
-                                </tr>
-                                <tr>
-                                    <td>Token</td>
-                                    <td>{gitToken}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </CardBody>
-                </div>
-            </Card>
-        );
-    }
-
+    const handleGCPFileChange = (event) => {
+        const uploadedFile = event.target.files[0];
+        setNewCloudAccount(prevState => ({
+            ...prevState,
+            gcp: {
+                id: "",
+                file: uploadedFile
+            }
+        }));
+    };
 
 
     const handleCloudChange = (cloud) => {
@@ -178,18 +117,17 @@ export default function ProfileCredentials({ setWarning }) {
         }))
     }
 
-    useEffect(() => {
-        token &&
-            getCredentials(token, setAccounts, true);  //true = get full informations
-    }, [token]);
+
 
     const submitCredential = async (e) => {
         e.preventDefault();
+
+
         try {
             const form = new FormData();
             form.append("token", token);
             form.append("cloud", newCloudAccount.active);
-
+            // check if valide also.
             switch (newCloudAccount.active) {
                 case "aws":
                     form.append("accessKeyId", newCloudAccount.aws.accessKeyId);
@@ -205,11 +143,23 @@ export default function ProfileCredentials({ setWarning }) {
                     form.append("gitToken", newCloudAccount.git.gitToken)
                     break;
                 case "gcp":
+                    if (newCloudAccount.gcp.file !== null) {
+                        form.append("file", newCloudAccount.gcp.file)
+                    } else {
+                        setWarning({
+                            message: "No GCP credentials file has been choosen",
+                            type: "warning",
+                            isShown: true
+                        })
+                        return
+                    }
                     break;
                 default:
                     // Handle other cases or provide an error message
                     break;
             }
+
+            console.warn(form)
 
             const response = await fetch(
                 process.env.NEXT_PUBLIC_BACKEND_ADDR + "cloud/",
@@ -221,7 +171,7 @@ export default function ProfileCredentials({ setWarning }) {
 
             if (response.ok) {
                 setWarning({
-                    message: "Credentials saved succesfully" + newCloudAccount.active,
+                    message: "Credentials saved succesfully",
                     type: "success",
                     isShown: true
                 })
@@ -231,9 +181,7 @@ export default function ProfileCredentials({ setWarning }) {
                         setAccounts((prev) => ({
                             ...prev,
                             aws: [...prev.aws, {
-                                id: 'will be generated',
-                                accessKeyId: newCloudAccount.aws.accessKeyId.substring(1, 4) + "-XXXXXXX",
-                                secretAccessKey: newCloudAccount.aws.secretAccessKey.substring(1, 4) + "-XXXXXXX",
+                                id: 'aws-<refresh>',
                             }]
                         }))
                         break;
@@ -241,11 +189,15 @@ export default function ProfileCredentials({ setWarning }) {
                         setAccounts((prev) => ({
                             ...prev,
                             azure: [...prev.azure, {
-                                id: 'will be generated',
-                                subscriptionId: newCloudAccount.azure.subscriptionId.substring(1, 4) + "-XXXXXXX",
-                                clientId: newCloudAccount.azure.clientId.substring(1, 4) + "-XXXXXXX",
-                                clientSecret: newCloudAccount.azure.clientSecret.substring(1, 4) + "-XXXXXXX",
-                                tenantId: newCloudAccount.azure.tenantId.substring(1, 4) + "-XXXXXXX"
+                                id: 'azure-<refresh>',
+                            }]
+                        }))
+                        break;
+                    case "gcp":
+                        setAccounts((prev) => ({
+                            ...prev,
+                            gcp: [...prev.gcp, {
+                                id: 'gcp-<refresh>',
                             }]
                         }))
                         break;
@@ -253,13 +205,9 @@ export default function ProfileCredentials({ setWarning }) {
                         setAccounts((prev) => ({
                             ...prev,
                             git: [...prev.git, {
-                                id: 'will be generated',
-                                gitToken: newCloudAccount.git.gitToken.substring(1, 4) + "-XXXXXXX",
+                                id: 'git-<refresh>',
                             }]
                         }))
-                        break;
-                    case "gcp":
-                        // Handle GCP cloud account
                         break;
                     default:
                         // Handle other cases or provide an error message
@@ -273,7 +221,7 @@ export default function ProfileCredentials({ setWarning }) {
 
             } else {
                 setWarning({
-                    message: "Something went wrong, please try again later or contact support [error : 981]",
+                    message: "Something went wrong, please try again later or contact support.",
                     type: "danger",
                     isShown: true
                 })
@@ -337,53 +285,47 @@ export default function ProfileCredentials({ setWarning }) {
     const AddCredentialCard = () => {
         return addCredentialActive ? (
             <div className="vw-100 position-fixed m-0 p-0 d-flex justify-content-center" style={{ left: 0, top: "80px", zIndex: 10, height: "calc(100vh - 80px)", backdropFilter: "blur(8px)" }}>
-                <Card className="col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12 d-flex justify-content-center align-items-center" >
-                    <form className="border rounded w-100 bg-light" onSubmit={submitCredential}>
-                        <CardHeader className="justify-between">
-                            <div className="d-flex flex-row justify-content-left align-items-center gap-5">
+                <Card className="col-xl-3 col-lg-4 col-md-6 col-sm-12 d-flex justify-content-center align-items-center" >
+                    <form className="border rounded w-100" onSubmit={submitCredential} style={{ backgroundColor: "rgba(255,255,255,0.7)" }}>
+                        <CardHeader className="justify-between user-select-none w-100  border p-0 m-0">
+                            <div className="d-flex justify-content-left p-2 align-items-center">
                                 <div className="m-0 d-flex flex-row align-items-center">
-                                    <div className="form-check m-1">
-                                        <input className="form-check-input" type="radio" name="cloud" id="aws" value="aws"
-                                            onChange={(e) => handleCloudChange(e.target.value)}
-                                            checked={newCloudAccount.active == "aws"} />
-                                        <label className="form-check-label" htmlFor="aws">
-                                            AWS
-                                        </label>
-                                    </div>
-                                    <div className="form-check m-1">
-                                        <input className="form-check-input" type="radio" name="cloud" id="azure" value="azure"
-                                            onChange={(e) => handleCloudChange(e.target.value)}
-                                            checked={newCloudAccount.active == "azure"} />
-                                        <label className="form-check-label" htmlFor="azure">
-                                            AZURE
-                                        </label>
-                                    </div>
-                                    <div className="form-check m-1">
-                                        <input className="form-check-input" type="radio" name="git" id="git" value="git"
-                                            onChange={(e) => handleCloudChange(e.target.value)}
-                                            checked={newCloudAccount.active == "git"} />
-                                        <label className="form-check-label" htmlFor="git">
-                                            GIT
-                                        </label>
-                                    </div>
-                                    <div className="form-check m-1">
-                                        <input className="form-check-input" type="radio" name="cloud" id="gcp" value="gcp"
-                                            onChange={(e) => handleCloudChange(e.target.value)}
-                                            checked={newCloudAccount.active == "gcp"} />
-                                        <label className="form-check-label" htmlFor="gcp">
-                                            GCP
-                                        </label>
-                                    </div>
+                                    <select
+                                        className="form-select mx-1"
+                                        name="cloud"
+                                        value={newCloudAccount.active}
+                                        onChange={(e) => handleCloudChange(e.target.value)}
+                                    >
+                                        <option value="aws">AWS</option>
+                                        <option value="azure">Azure</option>
+                                        <option value="git">Git</option>
+                                        <option value="gcp">GCP</option>
+                                    </select>
                                 </div>
-                                <button className="text-dark ml-auto border bg-success p-2 rounded" title="submit credentials" type="submit">
-                                    <i className="bi bi-bookmark-plus"></i>
+                                <button
+                                    className="text-dark ml-auto border bg-success p-3 rounded-circle icon-cercle"
+                                    title="Submit Credentials"
+                                    type="submit"
+                                >
+                                    <i class="bi bi-plus"></i>
                                 </button>
-                                <button className="text-dark ml-1 border bg-danger p-2 rounded" title="close" onClick={() => { setAddCredentialActive(false) }}>
+                                <button
+                                    type="button"
+                                    className="text-dark ml-1 border bg-warning p-3 rounded-circle icon-cercle"
+                                    title="Please note that we don't check those credentials till you use them."
+                                >
+                                    <i className="bi bi-question"></i>
+                                </button>
+                                <button
+                                    className="text-dark ml-1 border bg-danger p-3 rounded-circle icon-cercle"
+                                    title="Close"
+                                    onClick={() => { setAddCredentialActive(false) }}
+                                >
                                     <i className="bi bi-x"></i>
                                 </button>
                             </div>
                         </CardHeader>
-                        <CardBody className="overflow-visible d-flex flex-column justify-content-center">
+                        <CardBody className="overflow-visible d-flex flex-column justify-content-center  overflow-hidden">
 
                             {newCloudAccount.active == "aws" &&
                                 <>
@@ -475,6 +417,44 @@ export default function ProfileCredentials({ setWarning }) {
 
                                 </>
                             }
+                            {newCloudAccount.active == "gcp" &&
+                                <>
+                                    <table className="table text-dark">
+                                        <tbody>
+                                            <tr>
+                                                <td >service&nbsp;key</td>
+                                                <td className="d-flex align-items-center">
+                                                    {newCloudAccount.gcp.file ?
+                                                        newCloudAccount.gcp.file.name
+                                                        :
+                                                        <label class="gcp-file-upload">
+                                                            <i class="bi bi-cloud-upload mr-2"></i>
+                                                            Upload
+                                                            <input
+                                                                type="file"
+                                                                accept=".json,application/json"
+                                                                onChange={handleGCPFileChange}
+                                                            />
+                                                        </label>
+                                                    }
+                                                </td>
+                                                {newCloudAccount.gcp.file &&
+                                                    <td>
+                                                        <i className="btn btn-secondary bi bi-trash"
+                                                            onClick={() => {
+                                                                setNewCloudAccount((prev) => ({ ...prev, gcp: { id: "", file: null } }))
+                                                            }
+                                                            }></i>
+                                                    </td>
+                                                }
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <small className="alert alert-warning mx-2"><i className="bi bi-exclamation-triangle mr-2"></i>Don&apos;t forget to enable Google cloud APIs you need.</small>
+                                    <a className="text-secondary cursor-pointer" href="https://cloud.google.com/iam/docs/keys-create-delete" target="_blank">where to get those ?</a>
+                                </>
+
+                            }
 
                             {newCloudAccount.active == "git" &&
                                 <>
@@ -504,10 +484,10 @@ export default function ProfileCredentials({ setWarning }) {
                 </Card>
             </div>
         ) : (
-            <Card className="col-xl-3 col-lg-4 col-md-6 col-sm-12 col-xs-12 my-5 py-5 d-flex align-items-center">
+            <Card className="p-2 col-xl-3 col-lg-3 col-md-4 col-sm-6 col-xs-12 my-2">
 
-                <div className="w-100 h-100 d-flex justify-content-center align-items-center">
-                    <h2 className="btn btn-success"
+                <div className="w-100 h-100 d-flex justify-content-center align-items-center mx-auto">
+                    <h2 className="btn btn-success shadow-lg"
                         onClick={() => {
                             setAddCredentialActive(true);
                         }}>
@@ -519,46 +499,53 @@ export default function ProfileCredentials({ setWarning }) {
         );
     }
 
+
+
     return (
         <>
             <ProfileNavbar />
-            <div className="d-flex row w-100 justify-content-center text-dark m-auto tilt-warp-title">
-                <div className="d-grid row w-100 col-xl-10 col-lg-10 col-md-11 col-sm-12 col-xs-12 text-dark justify-content-start">
-                    {accounts.aws.map((account, index) => (
-                        account.id &&
-                        <AWSCredentialCard
-                            key={index} // Assuming index is a suitable key
-                            cloud={account.cloud}
-                            id={account.id}
-                            accessKeyId={account.accessKeyId}
-                            secretAccessKey={account.secretAccessKey}
-                        />
-                    ))}
-                </div>
-                <div className="d-grid row w-100 col-xl-10 col-lg-10 col-md-11 col-sm-12 col-xs-12 text-dark justify-content-start">
+            <div className="d-flex flex-wrap my-5 row justify-content-center container text-dark mx-auto tilt-warp-title">
+                <div className="d-flex justify-content-left flex-wrap w-100">
+
+                            {waitCard}
+
                     {accounts.azure.map((account, index) => (
                         account.id &&
-                        <AZURECredentialCard
-                            key={index} // Assuming index is a suitable key
+                        <CredentialCard
+                            key={index}
                             id={account.id}
-                            subscriptionId={account.subscriptionId}
-                            clientId={account.clientId}
-                            clientSecret={account.clientSecret}
-                            tenantId={account.tenantId}
+                            date={account.date}
                         />
                     ))}
-                </div>
-                <div className="d-grid row w-100 col-xl-10 col-lg-10 col-md-11 col-sm-12 col-xs-12 text-dark justify-content-start">
+                    {accounts.aws.map((account, index) => (
+                        account.id &&
+                        <CredentialCard
+                            key={index}
+                            cloud={account.cloud}
+                            id={account.id}
+                            date={account.date}
+                        />
+                    ))}
                     {accounts.git.map((account, index) => (
                         account.id &&
-                        <GithubCredentialCard
-                            key={index} // Assuming index is a suitable key
+                        <CredentialCard
+                            key={index}
                             id={account.id}
-                            gitToken={account.gitToken}
+                            date={account.date}
                         />
                     ))}
+                    {accounts.gcp.map((account, index) => (
+                        account.id &&
+                        <CredentialCard
+                            key={index}
+                            id={account.id}
+                            date={account.date}
+                        />
+                    ))}
+
                     <AddCredentialCard />
                 </div>
+
             </div>
         </>
     );

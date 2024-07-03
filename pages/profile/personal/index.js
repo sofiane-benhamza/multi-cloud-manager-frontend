@@ -131,21 +131,18 @@ export default function ProfileCredentials({setWarning}) {
     };
 
     useEffect(() => {
-        token && getPersonnalInfo(token, setPersonnalInfo);            
+        token && getPersonnalInfo(token, setPersonnalInfo).then(()=>{
+            setPersonnalInfoAreFetched(true)
+        });            
     }, [token]); // Dependencies array is empty since it should run only once
 
-    const [personnalInfoAreFetched, setpersonnalInfoAreFetched] = useState(false);
+    const [personnalInfoAreFetched, setPersonnalInfoAreFetched] = useState(false);
 
-    useEffect(() => {
-        // Check if all values in personnalInfo are non-null and non-undefined
-        const isFetched = Object.values(personnalInfo).every(value => value !== null && value !== undefined);
-        setpersonnalInfoAreFetched(isFetched);
-    }, [personnalInfo]); // Re-run on changes to personnalInfo
 
     return (
         <>
             <ProfileNavbar />
-            <div className="d-flex w-100 justify-content-center text-dark tilt-warp-title">
+            <div className="d-flex w-100 justify-content-center text-dark tilt-warp-title mb-5">
                 {personnalInfoAreFetched ? (
                     <form className="mt-4 border border-dark rounded p-5" onSubmit={handleUpdateUser}>
                         <div className="row">

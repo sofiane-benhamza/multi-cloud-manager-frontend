@@ -3,7 +3,6 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/home": "pages/home.js",
-  "/profile/credentials": "pages/profile/credentials.js",
   "/home/aws/ec2": "pages/home/aws/ec2.js",
   "/home/aws/ec2/create": "pages/home/aws/ec2/create.js"
 }

@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/router";
 import { Card, CardHeader, CardBody } from "@nextui-org/react";
-import { useEffect, useContext, useState } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import ProfileNavbar from '@/comps/ProfileNavbar.js'; // Importing the profile component
 import { AuthContext } from "@/pages/_app";
-import { getCredentials } from "@/utils/general";
+import { getCredentials, wait } from "@/utils/general";
 import Image from "next/image";
 export default function ProfileCredentials({ setWarning }) {
     const INIT = {
@@ -34,10 +34,19 @@ export default function ProfileCredentials({ setWarning }) {
         }
     }
     const { token } = useContext(AuthContext);
+    const [waitCard, setWaitCard] = useState(
+        <button className="btn btn-light border-light btn-lg m-5 p-5">
+            <div className="spinner-border text-primary" style={{ fontSize: "40px" }} role="status">
+                <span className="visually-hidden"></span>
+            </div>
+        </button>
+    )
 
     useEffect(() => {
         token &&
-            getCredentials(token, setAccounts, true); 
+            getCredentials(token, setAccounts, true).then((ok) => {
+                setWaitCard(<></>)
+            });
     }, [token]);
 
     const [addCredentialActive, setAddCredentialActive] = useState(false);
@@ -48,14 +57,14 @@ export default function ProfileCredentials({ setWarning }) {
 
     // Passive Comps 
 
-    const CredentialCard = ({ id,  date }) => {
-        let n=3
-        if(id.charAt(1) == 'z')  n=5;
-        name = id.substring(0,n)
+    const CredentialCard = ({ id, date }) => {
+        let n = 3
+        if (id.charAt(1) == 'z') n = 5;
+        name = id.substring(0, n)
 
         return (
-            <Card className="p-2 col-xl-3 col-lg-3 col-md-4 col-sm-6 col-xs-12 my-2">
-                <div className="my-0 border border-dark rounded overflow-hidden">
+            <Card className="p-2 col-xl-3 col-lg-3 col-md-4 col-sm-6 col-xs-12 my-3 overflow-visible">
+                <div className="my-0 border border-dark rounded shadow down-to-up">
                     <CardHeader className="justify-between">
                         <div className="d-flex flex-row justify-content-left align-items-center gap-5">
                             <div>
@@ -478,7 +487,7 @@ export default function ProfileCredentials({ setWarning }) {
             <Card className="p-2 col-xl-3 col-lg-3 col-md-4 col-sm-6 col-xs-12 my-2">
 
                 <div className="w-100 h-100 d-flex justify-content-center align-items-center mx-auto">
-                    <h2 className="btn btn-success"
+                    <h2 className="btn btn-success shadow-lg"
                         onClick={() => {
                             setAddCredentialActive(true);
                         }}>
@@ -497,6 +506,9 @@ export default function ProfileCredentials({ setWarning }) {
             <ProfileNavbar />
             <div className="d-flex flex-wrap my-5 row justify-content-center container text-dark mx-auto tilt-warp-title">
                 <div className="d-flex justify-content-left flex-wrap w-100">
+
+                            {waitCard}
+
                     {accounts.azure.map((account, index) => (
                         account.id &&
                         <CredentialCard

@@ -257,3 +257,20 @@ input[type="file"] {
     transform: translateX(0)
   }
 }
+
+
+@keyframes opacityAnimation {
+  0% {
+      opacity: 0.5;
+  }
+  50% {
+      opacity: 0.3;
+  }
+  100% {
+      opacity: 0.5;
+  }
+}
+
+.loading-card {
+  animation: opacityAnimation 2s infinite; /* 2s duration, infinite loop */
+}

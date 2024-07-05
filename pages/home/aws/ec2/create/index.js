@@ -493,27 +493,6 @@ export default function CreateEC2({ setWarning, setToken }) {
                                                 <br />
                                                 <br />
 
-                                                {eC2.toInstall && eC2.toInstall !== "nothing" &&
-                                                    <>
-                                                        <label className="form-label ">
-                                                            github
-                                                        </label>
-                                                        <select
-                                                            type="password"
-                                                            value={django.gitAccount}
-                                                            name="gitAccount"
-                                                            className="form-select w-100 bg-light border-0 mb-3"
-                                                            onChange={handleDjangoInputChange}
-                                                            required
-                                                        > <option value="" defaultValue disabled>choose an existant account</option>
-                                                            {chooseFrom.accounts.map(name => (
-                                                                name.startsWith("git") &&
-                                                                <option key={name} value={name}>{name}</option>
-                                                            ))}
-                                                        </select>
-                                                    </>
-                                                }
-
                                                 {eC2.toInstall === "apache2" && (
                                                     <>
                                                         <label className="form-label">GitHub link - Deploy http<i title="must contain an index.html file on the root directory" className="ml-2 bi bi-question-circle-fill cursor-pointer"></i></label>
@@ -532,6 +511,22 @@ export default function CreateEC2({ setWarning, setToken }) {
 
                                                 {eC2.toInstall === "django" && (
                                                     <>
+                                                        <label className="form-label ">
+                                                            github
+                                                        </label>
+                                                        <select
+                                                            type="password"
+                                                            value={django.gitAccount}
+                                                            name="gitAccount"
+                                                            className="form-select w-100 bg-light border-0 mb-3"
+                                                            onChange={handleDjangoInputChange}
+                                                            required
+                                                        > <option value="" defaultValue disabled>choose an existant account</option>
+                                                            {chooseFrom.accounts.map(name => (
+                                                                name.startsWith("git") &&
+                                                                <option key={name} value={name}>{name}</option>
+                                                            ))}
+                                                        </select>
                                                         <label className="form-label w-100">Application port
                                                             <input
                                                                 type="number"
